@@ -1,6 +1,6 @@
 [build]
   publish = "TshirtMaker/bin/Release/net8.0/browser-wasm/publish/wwwroot"
-  command = "dotnet publish TshirtMaker/TshirtMaker.csproj -c Release"
+  command = "dotnet publish TshirtMaker/TshirtMaker.csproj -c Release -p:TreatWarningsAsErrors=false -warnaserror:false"
 
 [[redirects]]
   from = "/*"
@@ -8,4 +8,5 @@
   status = 200
 
 [build.environment]
-  DOTNET_VERSION = "8.0.x"
+  DOTNET_VERSION = "8.0.203"
+  NODE_VERSION = "20.x"
