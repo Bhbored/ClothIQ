@@ -1,0 +1,142 @@
+@using TshirtMaker.Models.Core
+@using TshirtMaker.Tests
+<div class="create-post-overlay @(IsOpen ? "create-post-open" : "")" @onclick="ClosePopup">
+    <div class="create-post-container" @onclick:stopPropagation="true">
+        <div class="create-post-header">
+            <h3 class="create-post-title">Create Post</h3>
+            <button class="create-post-close" @onclick="ClosePopup" title="Close">
+                <span class="material-symbols-outlined">close</span>
+            </button>
+        </div>
+
+        <div class="create-post-body">
+            <div class="create-post-form">
+                <div class="create-post-field">
+                    <div class="create-post-title-with-counter">
+                        <label class="create-post-label">Title <span class="required">*</span></label>
+                        <span class="create-post-char-count">@(postTitle.Length)/100</span>
+                    </div>
+                    <input type="text" class="create-post-input @(titleError ? "error" : "")"
+                        placeholder="Enter post title..." @bind="postTitle" @bind:event="oninput" maxlength="100" />
+                    @if (titleError)
+                    {
+                        <span class="create-post-error">Title is required</span>
+                    }
+                </div>
+
+                <div class="create-post-field">
+                    <label class="create-post-label">Select Design</label>
+                    <div class="create-post-designs-grid">
+                        @if (Designs != null && Designs.Any())
+                        {
+                            @foreach (var design in Designs.Take(6))
+                            {
+                                <div class="create-post-design-card @(selectedDesign?.Id == design.Id ? "selected" : "")"
+                                    @onclick="() => SelectDesign(design)">
+                                    <div class="create-post-design-image"
+                                        style="background-image: url('@design.FinalImageUrl')">
+                                        <div class="create-post-design-title-overlay">
+                                            <span class="create-post-design-title-text">@design.Title</span>
+                                        </div>
+                                    </div>
+                                    <div class="create-post-design-info">
+                                        <div class="create-post-design-color-container">
+                                            <div class="create-post-design-color" style="background-color: @design.Color"></div>
+                                            <span class="create-post-design-color-name">@design.DisplayedColor</span>
+                                        </div>
+                                        <span class="create-post-design-size">@design.Size</span>
+                                    </div>
+                                </div>
+                            }
+                        }
+                        else
+                        {
+                            <div class="create-post-empty">
+                                <span class="material-symbols-outlined">image_not_supported</span>
+                                <p>No designs available</p>
+                            </div>
+                        }
+                    </div>
+                </div>
+
+                <div class="create-post-field">
+                    <label class="create-post-switch-label">
+                        <input type="checkbox" class="create-post-switch" @bind="allowRemix" />
+                        <span class="create-post-switch-slider"></span>
+                        <span class="create-post-switch-text">Allow Remix</span>
+                    </label>
+                </div>
+            </div>
+        </div>
+
+        <div class="create-post-footer">
+            <button class="create-post-cancel-btn" @onclick="ClosePopup">Cancel</button>
+            <button class="create-post-submit-btn" @onclick="HandlePost" disabled="@(!IsValid)">
+                Post
+            </button>
+        </div>
+    </div>
+</div>
+
+@code {
+    [Parameter] public List<Design>? Designs { get; set; }
+    [Parameter] public bool IsOpen { get; set; }
+    [Parameter] public EventCallback OnClose { get; set; }
+    [Parameter, EditorRequired] public User CurrentUser { get; set; }
+    [Parameter, EditorRequired] public EventCallback<Post> OnPost { get; set; }
+
+    private string postTitle = string.Empty;
+    private Design? selectedDesign;
+    private bool allowRemix = true;
+    private bool titleError = false;
+
+    private bool IsValid => !string.IsNullOrWhiteSpace(postTitle) && selectedDesign != null;
+
+    private async Task ClosePopup()
+    {
+        ResetForm();
+        await OnClose.InvokeAsync();
+    }
+
+    private void SelectDesign(Design design)
+    {
+        selectedDesign = design;
+    }
+
+    private void ValidateTitle()
+    {
+        titleError = string.IsNullOrWhiteSpace(postTitle);
+    }
+
+    private async Task HandlePost()
+    {
+        ValidateTitle();
+
+        if (!IsValid || selectedDesign == null)
+            return;
+        if (CurrentUser == null)
+            return;
+
+        var newPost = new Post
+        {
+            PosterId = CurrentUser.Id,
+            DesignId = selectedDesign.Id,
+            Design = selectedDesign,
+            Description = postTitle,
+            AllowRemix = allowRemix,
+            Poster = CurrentUser,
+        };
+
+        await OnPost.InvokeAsync(newPost);
+        ResetForm();
+        await ClosePopup();
+    }
+
+    private void ResetForm()
+    {
+        postTitle = string.Empty;
+        selectedDesign = null;
+        allowRemix = true;
+        titleError = false;
+    }
+}

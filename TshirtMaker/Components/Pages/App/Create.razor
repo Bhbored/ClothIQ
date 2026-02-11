@@ -1,0 +1,832 @@
+@page "/create"
+@layout MainLayout
+@implements IDisposable
+@inject IDesignRepository Repository
+@inject IUserRepository UserRepo
+@inject ILogger<Create> logger
+@inject IAIDesignService Gemini
+@inject AuthStateService AuthService
+@inject SupabaseStorageService SupabaseStorage
+@inject NavigationManager Nav
+@using TshirtMaker.Components.ui.creation
+@using TshirtMaker.Components.ui.common
+@using TshirtMaker.PublicData
+@using TshirtMaker.Models.Enums
+@using TshirtMaker.Models.Core
+@using TshirtMaker.Utility
+@using TshirtMaker.Services
+@using TshirtMaker.Services.Supabase
+
+<PageTitle>TshirtMaker - AI Creation Workspace</PageTitle>
+
+<main class="create-main">
+    @if (isLoading)
+    {
+        <FeedLoader IsCentered="true" Message="Setting Things Up" />
+
+    }
+    else
+    {
+        <ImagePreview IsVisible="@isPreviewing" ImageUrl="@clothImage" OnClose="@HidePreview" />
+        <Toast IsVisible="@showToast" OnClose="@HideToast" />
+        <div class="create-container">
+            <!-- Left Sidebar: Configuration -->
+            <aside class="create-sidebar create-sidebar-left">
+                <div class="create-sidebar-content">
+                    <div class="create-section">
+                        <h3 class="create-section-title">Garment Specs</h3>
+                        <div class="create-specs">
+                            <!-- Apparel Type -->
+                            <div class="create-spec-group">
+                                <p class="create-label">Apparel Type</p>
+                                <div class="dropdown">
+                                    <button class="btn btn-secondary dropdown-toggle create-apparel-dropdown" type="button"
+                                            id="apparelTypeDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                                        @selectedApparelType.ToString()
+                                    </button>
+                                    <ul class="dropdown-menu create-dropdown-menu" aria-labelledby="apparelTypeDropdown">
+                                        @foreach (var apparelType in apparelTypes)
+                                        {
+                                            <li>
+                                                <a class="dropdown-item @(selectedApparelType == apparelType ? "active" : "")"
+                                                   @onclick="@(() => switchApparel(apparelType))">
+                                                    @apparelType.ToString()
+                                                </a>
+                                            </li>
+                                        }
+                                    </ul>
+                                </div>
+                            </div>
+
+                            <!-- Base Color -->
+                            <div class="create-spec-group">
+                                <p class="create-label">Base Color</p>
+                                <div class="dropdown">
+                                    <button class="btn btn-secondary dropdown-toggle create-apparel-dropdown" type="button"
+                                            id="colorDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                                        <span class="color-preview"
+                                              style="background-color: @(selectedColor ?? "#FFFFFF");"></span>
+                                        @ColorHelper.HexToColorName(selectedColor!)
+                                    </button>
+                                    <ul class="dropdown-menu create-dropdown-menu" aria-labelledby="colorDropdown">
+                                        @foreach (var color in baseColors)
+                                        {
+                                            <li>
+                                                <a class="dropdown-item @(selectedColor == color.Value ? "active" : "")"
+                                                   @onclick="@(() => UpdateColor(color.Value))">
+                                                    <span class="color-preview"
+                                                          style="background-color: @(color.Value ?? "#FFFFFF");"></span>
+                                                    @color.Name
+                                                </a>
+                                            </li>
+                                        }
+                                    </ul>
+                                </div>
+                            </div>
+
+                            <!-- Size Selector -->
+                            <div class="create-spec-group">
+                                <p class="create-label">Size</p>
+                                <div class="create-size-grid">
+                                    @foreach (var size in sizes)
+                                    {
+                                        <button class="create-size-btn @(selectedSize == size ? "active" : "")"
+                                                @onclick="@(() => UpdateSize(size))">
+                                            @size.ToString()
+                                        </button>
+                                    }
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Material Specs -->
+                    <div class="create-section create-section-divider">
+                        <h4 class="create-subsection-title">Fabric Texture</h4>
+                        <div class="create-material-grid">
+                            @if (MaterialPrests != null)
+                            {
+                                @foreach (var material in MaterialPrests)
+                                {
+                                    <div class="create-material-card @(selectedMaterial == material.Title ? "active" : "")"
+                                         @onclick="@(() => UpdateMaterial(material.Title))">
+                                        <div class="create-material-preview"
+                                             style="background-image: url('@material.PreviewImageUrl'); background-size: cover; background-position: center;"></div>
+                                        <span>@material.Title</span>
+                                    </div>
+                                }
+                            }
+                        </div>
+                    </div>
+                </div>
+            </aside>
+
+            <!-- Center: 3D Preview Viewport -->
+            <section class="create-viewport">
+
+                <!-- Viewport Tools -->
+                @if (currentWindow == "setup")
+                {
+                    <div class="create-viewport-tools">
+                        <button class="create-tool-btn" title="View in AR">
+                            <span class="material-symbols-outlined">view_in_ar</span>
+                        </button>
+                        <button class="create-tool-btn" title="Fullscreen" type="button" @onclick="ShowPreview">
+                            <span class="material-symbols-outlined">fullscreen</span>
+                        </button>
+                    </div>
+                }
+
+
+                <!-- Step Navigation Buttons -->
+                <div class="create-step-nav">
+                    <button type="button"
+                            class="create-step-btn @(currentWindow == "setup" ? "active" : "") @(!CanNavigateToStep("setup") ? "disabled" : "")"
+                            @onclick="@(() => ChangeWindow("setup"))" disabled="@(!CanNavigateToStep("setup"))">
+                        <div class="create-step-indicator"></div>
+                        <span class="create-step-label">Setup</span>
+                    </button>
+                    <div class="create-step-connector"></div>
+                    <button type="button"
+                            class="create-step-btn @(currentWindow == "creation" ? "active" : "") @(!CanNavigateToStep("creation") ? "disabled" : "")"
+                            @onclick="@(() => ChangeWindow("creation"))" disabled="@(!CanNavigateToStep("creation"))">
+                        <div class="create-step-indicator"></div>
+                        <span class="create-step-label">Creation</span>
+                    </button>
+                    <div class="create-step-connector"></div>
+                    <button type="button"
+                            class="create-step-btn @(currentWindow == "finalization" ? "active" : "") @(!CanNavigateToStep("finalization") ? "disabled" : "")"
+                            @onclick="@(() => ChangeWindow("finalization"))" disabled="@(!CanNavigateToStep("finalization"))">
+                        <div class="create-step-indicator"></div>
+                        <span class="create-step-label">Finalization</span>
+                    </button>
+                </div>
+
+                <!-- Main 3D Model Placeholder -->
+                <div class="create-preview-container">
+                    @if (apiError)
+                    {
+                        <div class="alert alert-danger mb-3" role="alert">
+                            @Gemini.ErrorMessage
+                            <button type="button" class="btn btn-danger ms-3" @onclick="RefreshPage">Reset</button>
+                        </div>
+                    }
+
+                    @* hon habilai *@
+                    @if (currentWindow == "setup")
+                    {
+                        <div class="create-preview-wrapper">
+                            <!-- Background content that gets blurred -->
+                            <div class="create-preview-background @(isGenerating ? "blurred" : "")">
+                                <!-- Background image -->
+                                <img src="images/bg.jpg" alt="Background" class="create-preview-bg-image" />
+                                <!-- Glow effect behind the shirt -->
+                                <div class="create-preview-glow"></div>
+                                <img src="@clothImage" alt="Interactive 3D preview" class="create-preview-image" />
+
+                                <!-- Floating rotation controls -->
+                                <div class="create-rotation-controls">
+                                    <button class="create-rotation-btn" @onclick="RotateLeft">
+                                        <span class="material-symbols-outlined">rotate_left</span>
+                                    </button>
+                                    <div class="create-rotation-divider"></div>
+                                    <span class="create-rotation-label">@position</span>
+                                    <div class="create-rotation-divider"></div>
+                                    <button class="create-rotation-btn" @onclick="RotateRight">
+                                        <span class="material-symbols-outlined">rotate_right</span>
+                                    </button>
+                                </div>
+                            </div>
+
+                            <!-- Generating Loader Overlay (not blurred) -->
+                            @if (isGenerating)
+                            {
+                                <div class="create-loader-overlay">
+                                    <GeneratingLoader />
+                                </div>
+                            }
+                        </div>
+
+                    }
+                    @if (currentWindow == "creation")
+                    {
+                        <div class="create-preview-wrapper full-width">
+                            <!-- Background content that gets blurred -->
+                            <div class="create-preview-background @(isSelecting ? "blurred" : "")">
+                                <Creation ImageUrls="generatedImageUrls" OnImageSelected="HandleImageSelected" />
+                            </div>
+
+                            <!-- Generating Loader Overlay (not blurred) -->
+                            @if (isSelecting)
+                            {
+                                <div class="create-loader-overlay">
+                                    <GeneratingLoader />
+                                </div>
+                            }
+                        </div>
+                    }
+                    @if (currentWindow == "finalization")
+                    {
+                        <Finalization FinalDesignImage="@currentDesign?.FinalImageUrl" Design="@currentDesign"
+                                      OnSave="HandleDesignSave" OnDiscard="HandleDiscard" />
+                    }
+                </div>
+
+                <!-- Bottom Action Bar -->
+                <div class="create-action-bar">
+                    @if (currentWindow == "setup")
+                    {
+                        <button class="create-generate-btn @(isGenerating ? "generating" : "")" @onclick="GenerateAIArt"
+                                disabled="@(isGenerating || string.IsNullOrWhiteSpace(promptText))">
+                            <span class="material-symbols-outlined">auto_awesome</span>
+                            @if (isGenerating)
+                            {
+                                <span>GENERATING...</span>
+                            }
+                            else
+                            {
+                                <span>GENERATE AI ART</span>
+                            }
+                        </button>
+                    }
+                    @if (currentWindow == "creation")
+                    {
+                        <button class="create-generate-btn @(isSelecting ? "generating" : "")" @onclick="SelectImage"
+                                disabled="@(!imageSelected || isSelecting)">
+                            <span class="material-symbols-outlined">check_circle</span>
+                            @if (isSelecting)
+                            {
+                                <span>SELECTING...</span>
+                            }
+                            else
+                            {
+                                <span>SELECT</span>
+                            }
+                        </button>
+                    }
+                </div>
+
+
+            </section>
+
+            <!-- Right Sidebar: Creative Engine -->
+            <aside class="create-sidebar create-sidebar-right">
+                <div class="create-sidebar-content">
+                    <div class="create-section">
+                        <h3 class="create-section-title">Design Engine</h3>
+                        <p class="create-section-subtitle">AI-powered artwork generation for your apparel.</p>
+
+                        <div class="create-design-content">
+                            <!-- Style Presets -->
+                            <div class="create-preset-group">
+                                <p class="create-label">Preset Styles</p>
+                                <div class="create-preset-grid">
+                                    @if (stylePresets != null)
+                                    {
+                                        @foreach (var preset in stylePresets)
+                                        {
+                                            <div class="create-preset-card @(selectedPreset == preset.Title ? "active" : "")"
+                                                 @onclick="@(() => UpdatePreset(preset.Title))">
+                                                <div class="create-preset-overlay"></div>
+                                                <img src="@preset.PreviewImageUrl" alt="@preset.Title" />
+                                                <div class="create-preset-label">
+                                                    <p>@preset.Title</p>
+                                                </div>
+                                                @if (selectedPreset == preset.Title)
+                                                {
+                                                    <div class="create-preset-check">
+                                                        <span class="material-symbols-outlined">check</span>
+                                                    </div>
+                                                }
+                                            </div>
+                                        }
+                                    }
+                                </div>
+                            </div>
+
+                            <!-- Prompt Input -->
+                            <div class="create-prompt-group">
+                                <div class="create-prompt-header">
+                                    <p class="create-label">Prompt Input</p>
+                                    <button class="create-enhance-btn" @onclick="EnhancePrompt">
+                                        <span class="material-symbols-outlined">bolt</span>
+                                        ENHANCE
+                                    </button>
+                                </div>
+                                <div class="create-textarea-wrapper">
+                                    <textarea class="create-textarea"
+                                              placeholder="Describe the artwork you want to generate on the center of the garment..."
+                                              value="@promptText"
+                                              @oninput="@((ChangeEventArgs e) => UpdatePrompt(e.Value?.ToString() ?? string.Empty))"
+                                              maxlength="500"></textarea>
+                                    <div class="create-char-count">@promptText.Length / 500</div>
+                                </div>
+                            </div>
+
+                            <!-- Negative Prompt (Advanced) -->
+                            <div class="create-advanced-group">
+                                <details class="create-advanced-details">
+                                    <summary class="create-advanced-summary">
+                                        <span>Advanced Settings</span>
+                                        <span class="material-symbols-outlined">expand_more</span>
+                                    </summary>
+                                    <div class="create-advanced-content">
+                                        <div class="create-advanced-field">
+                                            <p class="create-advanced-label">Negative Prompt</p>
+                                            <input class="create-advanced-input" type="text"
+                                                   placeholder="What to exclude (e.g. text, blur)" value="@negativePrompt"
+                                                   @oninput="@((ChangeEventArgs e) => UpdateNegativePrompt(e.Value?.ToString() ?? string.Empty))" />
+                                        </div>
+                                        <div class="create-advanced-field">
+                                            <p class="create-advanced-label">Upscale Resolution</p>
+                                            <div class="create-resolution-buttons">
+                                                <button class="create-resolution-btn @(selectedResolution == "2K" ? "active" : "")"
+                                                        @onclick="@(() => UpdateResolution("2K"))">
+                                                    2K
+                                                </button>
+                                                <button class="create-resolution-btn @(selectedResolution == "4K" ? "active" : "")"
+                                                        @onclick="@(() => UpdateResolution("4K"))">
+                                                    4K
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </details>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </aside>
+        </div>
+    }
+
+
+</main>
+
+@code {
+
+
+    #region fields
+
+    //ui controllers
+    private string currentWindow = "setup";
+    private bool promptEntered = false;
+    private bool isGenerating = false;
+    private bool isSelecting = false;
+    private bool showToast = false;
+
+    private bool isLoading = true;
+    private bool creationCompleted = false;
+    private bool imageSelected = false;
+    private bool selectionConfirmed = false;
+    private string position = "FRONT VIEW";
+    private bool apiError = false;
+    private bool isPreviewing = false;
+
+    //initial data
+
+    private User currentUser = new();
+    private string? clothImage;
+    private string? selectedImageUrl = null;
+    private ClothingType selectedApparelType = ClothingType.TShirt;
+    private string selectedColor = "#FFFFFF";
+    private ClothingSize selectedSize = ClothingSize.M;
+    private string selectedMaterial = "Heavy Cotton";
+    private string selectedPreset = "Cyberpunk";
+    private string promptText = string.Empty;
+    private string negativePrompt = string.Empty;
+    private string selectedResolution = "2K";
+
+    private Design? currentDesign = null;
+
+    #endregion
+
+
+
+    #region lists
+    private List<StylePresetPreview>? stylePresets = [];
+    private List<MaterialPreview> MaterialPrests = [];
+    private List<ClothingType> apparelTypes = [];
+    private List<ClothingSize> sizes = [];
+    private List<Resolution> resolutions = [];
+
+    #endregion
+
+
+    private List<(string Name, string Value)> baseColors = new()
+{
+("White", "#FFFFFF"),
+("Black", "#000000"),
+("Red", "#FF0000"),
+("Blue", "#0000FF"),
+("Green", "#00FF00"),
+("Yellow", "#FFFF00"),
+("Orange", "#FFA500"),
+("Purple", "#800080"),
+("Pink", "#FFC0CB"),
+("Gray", "#808080"),
+("Brown", "#A52A2A"),
+("Cyan", "#00FFFF"),
+("Magenta", "#FF00FF"),
+("Lime", "#32CD32"),
+("Navy", "#000080"),
+("Teal", "#008080"),
+("Maroon", "#800000"),
+("Olive", "#808000"),
+("Silver", "#C0C0C0"),
+("Gold", "#FFD700"),
+("Coral", "#FF7F50"),
+("Salmon", "#FA8072"),
+("Turquoise", "#40E0D0"),
+("Violet", "#EE82EE")
+};
+
+
+
+    #region image urls
+    //in real api ...just make the List empty
+    private List<string> generatedImageUrls = [
+    "public/designs/1117a4be-84aa-4f2c-b6ad-319d4f137c50.jpg",
+"public/designs/a362a712-5583-4596-8ef6-18f0a22ca6c9.jpg",
+"public/designs/de06bce0-6147-43c2-bd6e-761c2fd69dff.jpg",
+"public/designs/7eeeaadc-0d2c-4e89-8ab1-212ad67f5f2e.jpg",
+
+];
+
+    #endregion
+
+
+    protected override async Task OnInitializedAsync()
+    {
+
+        await Task.Delay(300);
+
+        await AuthService.InitializeAsync();
+        if (!AuthService.IsAuthenticated)
+        {
+            Nav.NavigateTo("/login");
+            return;
+        }
+
+        await base.OnInitializedAsync();
+    }
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            try
+            {
+                if (AuthService.CurrentUser != null)
+                {
+                    var id = AuthService.CurrentUser!.Id;
+                    var userdto = await UserRepo.GetByIdAsync(id);
+                    currentUser = userdto!.ToModel();
+                }
+                await RefreshPage();
+
+                await Task.Delay(1000);
+                isLoading = false;
+                await ShowToast();
+                StateHasChanged();
+            }
+            catch (Exception ex)
+            {
+                logger.LogInformation($"Error in CREATE.OnAfterRenderAsync: {ex.Message}");
+                isLoading = false;
+            }
+        }
+        await base.OnAfterRenderAsync(firstRender);
+    }
+
+    private async Task ShowToast()
+    {
+        showToast = true;
+        await InvokeAsync(StateHasChanged);
+    }
+
+    private async Task HideToast()
+    {
+        showToast = false;
+        await InvokeAsync(StateHasChanged);
+    }
+
+    async Task RefreshPage()
+    {
+        currentWindow = "setup";
+        stylePresets = PublicPresets.StylePresetPreviews;
+        MaterialPrests = PublicPresets.MaterialPresets;
+        apparelTypes = Enum.GetValues<ClothingType>().ToList();
+        sizes = Enum.GetValues<ClothingSize>().ToList();
+        resolutions = Enum.GetValues<Resolution>().ToList();
+        clothImage = "images/t-shirt_front.png";
+        isPreviewing = false;
+        apiError = false;
+
+        currentDesign = new Design
+        {
+            UserId = currentUser.Id,
+            ClothingType = selectedApparelType,
+            Color = selectedColor,
+            Size = selectedSize,
+            Material = GetMaterialEnum(selectedMaterial),
+            StylePreset = GetStylePresetEnum(selectedPreset),
+            Title = "Untitled Design",
+            Resolution = Resolution.TwoK,
+            Prompt = promptText,
+            NegativePrompt = negativePrompt
+        };
+
+        StateHasChanged();
+    }
+
+    #region ui handlers
+
+    private async Task ShowPreview()
+    {
+        isPreviewing = true;
+        StateHasChanged();
+
+
+    }
+    private async Task HidePreview()
+    {
+        isPreviewing = false;
+        StateHasChanged();
+    }
+    private void RotateLeft()
+    {
+        if (clothImage!.Equals("images/t-shirt_front.png", StringComparison.OrdinalIgnoreCase))
+        {
+            clothImage = "images/t-shirt_back_view.png";
+            position = "BACK VIEW";
+        }
+        if (clothImage!.Equals("images/polo_shirt_front.png", StringComparison.OrdinalIgnoreCase))
+        {
+            clothImage = "images/polo_shirt_back.png";
+            position = "BACK VIEW";
+        }
+        StateHasChanged();
+
+
+    }
+
+    private void RotateRight()
+    {
+        if (clothImage!.Equals("images/t-shirt_back_view.png", StringComparison.OrdinalIgnoreCase))
+        {
+            clothImage = "images/t-shirt_front.png";
+            position = "FRONT VIEW";
+        }
+        if (clothImage!.Equals("images/polo_shirt_back.png", StringComparison.OrdinalIgnoreCase))
+        {
+            clothImage = "images/polo_shirt_front.png";
+            position = "FRONT VIEW";
+
+        }
+        StateHasChanged();
+
+
+    }
+
+    void switchApparel(ClothingType type)
+    {
+        selectedApparelType = type;
+        clothImage = selectedApparelType switch
+        {
+            ClothingType.TShirt => "images/t-shirt_front.png",
+            ClothingType.Hoodie => "images/hoodie.png",
+            ClothingType.Sweat => "images/sweat.png",
+            ClothingType.LongSleeve => "images/longSleeve.png",
+            ClothingType.PoloShirt => "images/polo_shirt_front.png",
+            ClothingType.Jacket => "images/jacket.png",
+            ClothingType.Hat => "images/hat.png",
+            ClothingType.Tank => "images/tank.png",
+            ClothingType.ToteBag => "images/toteBag.png",
+            _ => "images/t-shirt_front.png",
+        };
+
+        if (currentDesign != null)
+        {
+            currentDesign.ClothingType = selectedApparelType;
+        }
+
+        StateHasChanged();
+    }
+
+    private bool CanNavigateToStep(string step)
+    {
+        return step switch
+        {
+            "setup" => true,
+            "creation" => creationCompleted,
+            "finalization" => selectionConfirmed,
+            _ => false
+        };
+    }
+    #endregion
+
+
+
+    private async Task GenerateAIArt()
+    {
+        if (string.IsNullOrWhiteSpace(promptText) || isGenerating)
+            return;
+
+        isGenerating = true;
+        StateHasChanged();
+        await Task.Delay(7000);
+        //for real generated images uncomment the below line
+        // generatedImageUrls = await Gemini.GenerateInitialDesignsAsync(currentDesign!.Prompt, currentDesign.NegativePrompt,
+        // currentDesign.StylePreset);
+        // apiError = !string.IsNullOrEmpty(Gemini.ErrorMessage);
+        isGenerating = false;
+        creationCompleted = true;
+        imageSelected = false;
+        selectionConfirmed = false;
+        selectedImageUrl = null;
+
+        ChangeWindow("creation");
+    }
+
+    private void EnhancePrompt()
+    {
+        // ma eli 5la2 a3mla...momkin ba3dain
+    }
+
+    private string ChangeWindow(string window)
+    {
+        if (!CanNavigateToStep(window))
+            return currentWindow;
+
+        currentWindow = window;
+        StateHasChanged();
+        return currentWindow;
+    }
+
+    private void OnPromptTextChanged()
+    {
+        promptEntered = !string.IsNullOrWhiteSpace(promptText);
+        StateHasChanged();
+    }
+
+    private void HandleImageSelected(string imageUrl)
+    {
+        selectedImageUrl = imageUrl;
+        imageSelected = true;
+        selectionConfirmed = false;
+        StateHasChanged();
+    }
+
+    private async Task SelectImage()
+    {
+
+        if (imageSelected && !string.IsNullOrEmpty(selectedImageUrl) && !isSelecting)
+        {
+            isSelecting = true;
+            StateHasChanged();
+            await Task.Delay(10000);
+            isSelecting = false;
+
+            // in real cases uncomment here
+            // var finalDesign = await Gemini.FinalizeDesignAsync(selectedImageUrl, clothImage!, currentDesign!.Id,
+            // currentDesign.Color);
+
+
+            //and delete this
+            var finalUrl = "https://fbtaluaxtwvxfdnflxoq.supabase.co/storage/v1/object/sign/Design%20images/final_demo_design.png?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV8wZjllMzgzNS0yOWYzLTQzNjMtODFjYS0wMGM0YmZiMjVlZjMiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJEZXNpZ24gaW1hZ2VzL2ZpbmFsX2RlbW9fZGVzaWduLnBuZyIsImlhdCI6MTc2OTE4NzI5MCwiZXhwIjoxODAwNzIzMjkwfQ.tTafVsJiTjXjO3pZ9etmmZ1a4qGY-I7in4KBzygu-O0";
+
+
+            if (currentDesign != null)
+            {
+                currentDesign.FinalImageUrl = finalUrl;
+            }
+
+            selectionConfirmed = true;
+            ChangeWindow("finalization");
+        }
+    }
+
+    #region Update Methods
+
+    private void UpdateColor(string color)
+    {
+        selectedColor = color;
+        if (currentDesign != null)
+        {
+            currentDesign.Color = color;
+        }
+        StateHasChanged();
+    }
+
+    private void UpdateSize(ClothingSize size)
+    {
+        selectedSize = size;
+        if (currentDesign != null)
+        {
+            currentDesign.Size = size;
+        }
+        StateHasChanged();
+    }
+
+    private void UpdateMaterial(string materialTitle)
+    {
+        selectedMaterial = materialTitle;
+        if (currentDesign != null)
+        {
+            currentDesign.Material = GetMaterialEnum(materialTitle);
+        }
+        StateHasChanged();
+    }
+
+    private void UpdatePreset(string presetTitle)
+    {
+        selectedPreset = presetTitle;
+        if (currentDesign != null)
+        {
+            currentDesign.StylePreset = GetStylePresetEnum(presetTitle);
+        }
+        StateHasChanged();
+    }
+
+    private void UpdatePrompt(string prompt)
+    {
+        promptText = prompt;
+        if (currentDesign != null)
+        {
+            currentDesign.Prompt = prompt;
+        }
+        OnPromptTextChanged();
+    }
+
+    private void UpdateNegativePrompt(string negativePromptValue)
+    {
+        negativePrompt = negativePromptValue;
+        if (currentDesign != null)
+        {
+            currentDesign.NegativePrompt = negativePromptValue;
+        }
+        StateHasChanged();
+    }
+
+    private void UpdateResolution(string resolution)
+    {
+        selectedResolution = resolution;
+        if (currentDesign != null)
+        {
+            currentDesign.Resolution = resolution == "4K" ? Resolution.FourK : Resolution.TwoK;
+        }
+        StateHasChanged();
+    }
+
+    #endregion
+
+    #region Helper Methods
+
+    private Material GetMaterialEnum(string materialTitle)
+    {
+        var materialPreview = MaterialPrests.FirstOrDefault(m => m.Title == materialTitle);
+        if (materialPreview != null && Enum.TryParse<Material>(materialPreview.Material, out var material))
+        {
+            return material;
+        }
+        return Material.HeavyCotton;
+    }
+
+    private StylePresetType? GetStylePresetEnum(string presetTitle)
+    {
+        var stylePreview = stylePresets?.FirstOrDefault(s => s.Title == presetTitle);
+        return stylePreview?.StylePreset;
+    }
+
+    #endregion
+
+
+
+    private async Task HandleDiscard()
+    {
+
+        await RefreshPage();
+    }
+
+    private async Task HandleDesignSave(string title)
+    {
+        if (currentUser != null && currentDesign != null)
+        {
+            currentDesign.Title = title;
+            currentDesign.UserId = currentUser.Id;
+            currentDesign.User = currentUser;
+            currentUser.Designs.Add(currentDesign);
+        }
+
+        var designdto = DesignDto.FromModel(currentDesign!);
+        var userdto = UserDto.FromModel(currentUser!);
+        await Repository.CreateAsync(designdto);
+        await UserRepo.UpdateAsync(userdto);
+        await RefreshPage();
+    }
+
+    public void Dispose()
+    {
+        currentDesign = null;
+    }
+}

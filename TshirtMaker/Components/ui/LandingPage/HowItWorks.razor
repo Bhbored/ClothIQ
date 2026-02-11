@@ -1,0 +1,268 @@
+<section id="how-it-works" class="how-it-works-section fade-in">
+    <div class="container">
+        <div class="text-center mb-5 mb-md-6">
+            <div class="icon-wrapper mb-4">
+                <span style="font-size: 3rem;">👔</span>
+            </div>
+            <h1 class="section-title mb-3">
+                Choose Your Style
+            </h1>
+            <p class="section-description">
+                Select from premium t-shirts, hoodies, jackets, and more. Pick your color, size, and material to
+                visualize your AI masterpiece.
+            </p>
+        </div>
+
+        <div class="filter-buttons d-flex flex-wrap justify-content-center gap-3 mb-5 mb-md-6">
+            <button class="btn filter-btn @(selectedFilter == null ? "active" : "")"
+                    @onclick="() => SetFilter(null)">
+                All Styles
+            </button>
+            <button class="btn filter-btn @(selectedFilter == "TShirt" ? "active" : "")"
+                    @onclick='() => SetFilter("TShirt")'>
+                T-Shirts
+            </button>
+            <button class="btn filter-btn @(selectedFilter == "Hoodie" ? "active" : "")"
+                    @onclick='() => SetFilter("Hoodie")'>
+                Hoodies
+            </button>
+            <button class="btn filter-btn @(selectedFilter == "Jacket" ? "active" : "")"
+                    @onclick='() => SetFilter("Jacket")'>
+                Jackets
+            </button>
+            <button class="btn filter-btn @(selectedFilter == "Accessories" ? "active" : "")"
+                    @onclick='() => SetFilter("Accessories")'>
+                Accessories
+            </button>
+        </div>
+
+        <div class="row g-4">
+            @foreach (var item in filteredItems)
+            {
+                <div class="col-md-6 col-lg-4">
+                    <div class="product-card">
+                        <div class="product-image-wrapper">
+                            <img src="@item.ImageUrl" alt="@item.Title" class="product-image" />
+                            <div class="image-overlay">
+                                <span class="artwork-label">Artwork: @item.Artwork</span>
+                            </div>
+                            @if (!string.IsNullOrEmpty(item.Badge))
+                            {
+                                <div class="product-badge @item.BadgeClass">@item.Badge</div>
+                            }
+                        </div>
+                        <div class="product-info">
+                            <div class="d-flex justify-content-between align-items-start mb-3">
+                                <div>
+                                    <h3 class="product-title">@item.Title</h3>
+                                    <p class="product-material">@item.Material</p>
+                                </div>
+                                <span class="product-price">$@item.Price</span>
+                            </div>
+                            <div class="product-options">
+                                <div class="option-row">
+                                    <span class="option-label">Colors</span>
+                                    <div class="color-options">
+                                        @foreach (var color in item.Colors)
+                                        {
+                                            <button class="color-btn" style="background-color: @color;"
+                                                    @onclick="() => SelectColor(item, color)"></button>
+                                        }
+                                    </div>
+                                </div>
+                                <div class="option-row">
+                                    <span class="option-label">Sizes</span>
+                                    <div class="size-options">
+                                        @foreach (var size in item.Sizes)
+                                        {
+                                            <span class="size-badge @(size == item.SelectedSize ? "active" : "")">@size</span>
+                                        }
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+
+        <div class="text-center mt-5 mt-md-6">
+            <button class="view-all-btn">
+                View All Categories
+                <span>→</span>
+            </button>
+        </div>
+    </div>
+</section>
+
+@code {
+    private string? selectedFilter = null;
+    private List<ProductItem> allItems = new();
+    private List<ProductItem> filteredItems = new();
+
+    protected override void OnInitialized()
+    {
+        allItems = new List<ProductItem>
+{
+new ProductItem
+{
+Title = "Classic Tee",
+Material = "100% Organic Cotton",
+Price = 29,
+ImageUrl =
+"https://lh3.googleusercontent.com/aida-public/AB6AXuAp9sf2yzfopNKz8FYtBM-fieEiinpsdpnsbcVYQ40JUO4wfESQ8ChtpD_DIyBghO6L5klKjCG6owGKWcLcs8qIoybgiq3howAMg8ntnIMW2tJy_n_z-itpRz2zaLPkHqspdcZKAUZz9Cvyes2VKREDmn-znAOcSZDZLpTv7gJvOuXonyUibBGaUq9L4z3AJ3iiZ3SKaYHiXGZooTNyAIVnbbmFUyv6ivFKJBNxMtGpzv-Y11Yyo1flESWzW3iE1bQ3aHwUO7CToU6u",
+Artwork = "Cyber-Abstract #04",
+Badge = "Best Seller",
+BadgeClass = "badge-bestseller",
+Colors = new List<string> { "#000000", "#FFFFFF", "#2563eb" },
+Sizes = new List<string> { "S", "M", "L", "XL" },
+SelectedSize = "M",
+Type = "TShirt"
+},
+new ProductItem
+{
+Title = "Retro Print Tee",
+Material = "Soft Jersey Cotton",
+Price = 27,
+ImageUrl = "public/designs/1.png",
+Artwork = "Vintage Waves",
+Colors = new List<string> { "#fef3c7", "#1e3a8a", "#FFFFFF" },
+Sizes = new List<string> { "S", "M", "L", "XL" },
+SelectedSize = "M",
+Type = "TShirt"
+},
+new ProductItem
+{
+Title = "Artist Graphic Tee",
+Material = "Combed Cotton",
+Price = 32,
+ImageUrl = "public/designs/3.jpg",
+Artwork = "Street Art #12",
+Badge = "New",
+BadgeClass = "badge-new",
+Colors = new List<string> { "#000000", "#dc2626", "#4b5563" },
+Sizes = new List<string> { "S", "M", "L", "XL" },
+SelectedSize = "L",
+Type = "TShirt"
+},
+new ProductItem
+{
+Title = "Cozy Hoodie",
+Material = "Heavyweight Fleece",
+Price = 59,
+ImageUrl =
+"https://lh3.googleusercontent.com/aida-public/AB6AXuDhI0J2vRUUdgVHPkuNyBThrKk8ihZjLOY8SNMaUjlwMmk6ggKXlFJLlovaP9yyBsdTwt8HMrt2Pb9eWTxXJuqtCzHQ7xBuYN9w0Cqrdtnrl3jVhugUTLAz4grIZ8pVdTgJj0oOnvmCK5yaflVe3clJl2ztO3RAR9J_ZzH3I_sr7-vQfbD3YwpPu_G87gZ9sjMUL4fKFYII69KcmGeBc7dOi-HFfIn3x5z4Z0sXQs9m4ZQlpr-k0v-yfSGHIxZgTqZ1WTuNB3hXGY-X",
+Artwork = "Neon Cityscape",
+Colors = new List<string> { "#6b7280", "#312e81" },
+Sizes = new List<string> { "S", "M", "L", "XL" },
+SelectedSize = "L",
+Type = "Hoodie"
+},
+new ProductItem
+{
+Title = "Pullover Hoodie",
+Material = "Brushed Back Fleece",
+Price = 54,
+ImageUrl = "public/designs/2.png",
+Artwork = "Mountain Sunset",
+Colors = new List<string> { "#1f2937", "#7c2d12", "#1e3a8a" },
+Sizes = new List<string> { "S", "M", "L", "XL" },
+SelectedSize = "M",
+Type = "Hoodie"
+},
+new ProductItem
+{
+Title = "Bomber Jacket",
+Material = "Water-Resistant Shell",
+Price = 89,
+ImageUrl =
+"https://lh3.googleusercontent.com/aida-public/AB6AXuADIKtG5COlUrjW6PjeVc__KpWQ1Xp-_Fcm70dU6FRcO17hPW0U5ySOjq21MNeEtgqO0iH3EWec6LXUWrD3ps7U_tBp4tc7JOTMrsZzSLms1mddo_eO288y4SDeYY0y7ofMVtK3MJvyo7s4aYpzhxvw_lDkhidrOxA2K05xsmA5RivWzQ_4fOI6iuolGKweosAHtypFedvticxjQ5rkahsjCDCzYTQb8yG2uguisrDmIxca7R69PZHhiQQZYQbTZxU9fk1afol4ebfw",
+Artwork = "Anime Glitch V2",
+Badge = "New",
+BadgeClass = "badge-new",
+Colors = new List<string> { "#14532d", "#000000" },
+Sizes = new List<string> { "M", "L", "XL" },
+SelectedSize = "XL",
+Type = "Jacket"
+},
+new ProductItem
+{
+Title = "Denim Jacket",
+Material = "Premium Denim",
+Price = 79,
+ImageUrl = "public/designs/5.jpg",
+Artwork = "Urban Script",
+Colors = new List<string> { "#1e3a5f", "#374151", "#78350f" },
+Sizes = new List<string> { "S", "M", "L", "XL" },
+SelectedSize = "L",
+Type = "Jacket"
+},
+new ProductItem
+{
+Title = "Camp Cap",
+Material = "Cotton Twill",
+Price = 24,
+ImageUrl = "public/designs/9.png",
+Artwork = "Minimal Logo",
+Colors = new List<string> { "#000000", "#FFFFFF", "#dc2626", "#1e40af" },
+Sizes = new List<string> { "One Size" },
+SelectedSize = "One Size",
+Type = "Accessories"
+},
+new ProductItem
+{
+Title = "Tote Bag",
+Material = "Canvas",
+Price = 22,
+ImageUrl = "public/designs/7.jpg",
+Artwork = "Botanical Print",
+Badge = "Eco",
+BadgeClass = "badge-bestseller",
+Colors = new List<string> { "#fef3c7", "#1f2937", "#fecdd3" },
+Sizes = new List<string> { "One Size" },
+SelectedSize = "One Size",
+Type = "Accessories"
+}
+};
+        filteredItems = PickRandom(allItems, 3);
+    }
+
+    private void SetFilter(string? filter)
+    {
+        selectedFilter = filter;
+        if (string.IsNullOrEmpty(filter))
+        {
+            filteredItems = PickRandom(allItems, 3);
+        }
+        else
+        {
+            filteredItems = allItems.Where(i => i.Type == filter).ToList();
+        }
+        StateHasChanged();
+    }
+
+    private static List<ProductItem> PickRandom(List<ProductItem> source, int count)
+    {
+        return source.OrderBy(_ => Random.Shared.Next()).Take(count).ToList();
+    }
+
+    private void SelectColor(ProductItem item, string color)
+    {
+        StateHasChanged();
+    }
+
+    private class ProductItem
+    {
+        public string Title { get; set; } = string.Empty;
+        public string Material { get; set; } = string.Empty;
+        public int Price { get; set; }
+        public string ImageUrl { get; set; } = string.Empty;
+        public string Artwork { get; set; } = string.Empty;
+        public string? Badge { get; set; }
+        public string BadgeClass { get; set; } = string.Empty;
+        public List<string> Colors { get; set; } = new();
+        public List<string> Sizes { get; set; } = new();
+        public string SelectedSize { get; set; } = string.Empty;
+        public string Type { get; set; } = string.Empty;
+    }
+}

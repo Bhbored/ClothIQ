@@ -1,0 +1,375 @@
+@page "/dashboard"
+@layout MainLayout
+@inject IDesignRepository DesignRepository
+@inject IUserRepository UserRepository
+@inject ILikeRepository LikeRepository
+@inject ILogger<Dashboard> Logger
+@inject NavigationManager Nav
+@inject AuthStateService AuthService
+
+<PageTitle>TshirtMaker - Dashboard</PageTitle>
+
+<main class="dashboard-main">
+    <div class="dashboard-container">
+        <section class="dashboard-content">
+            @if (isLoading)
+            {
+                <FeedLoader Message="Loading Dashboard" IsCentered="true" />
+            }
+            else
+            {
+                <div class="dashboard-header">
+                    <div>
+                        <h1 class="dashboard-title">
+                            Welcome Back! <span class="hero-gradient-text">@(currentUser?.Username ?? "User")</span>
+                        </h1>
+                        <p class="dashboard-subtitle">Here's what's happening with your designs</p>
+                    </div>
+                    <button class="dashboard-create-btn" @onclick="NavigateToCreate">
+                        <span class="material-symbols-outlined">add</span>
+                        <span>New Design</span>
+                    </button>
+                </div>
+
+                @if (!recentDesigns.Any() && latestDesign == null)
+                {
+                    <div class="dashboard-empty-state">
+                        <span class="material-symbols-outlined">inventory_2</span>
+                        <h3>No designs yet</h3>
+                        <p>Start creating your first design to see it here!</p>
+
+                    </div>
+                }
+
+                @if (latestDesigns.Any())
+                {
+                    <div class="dashboard-latest-section">
+                        <div class="dashboard-section-header">
+                            <div>
+                                <h3 class="dashboard-section-title">Latest Creations</h3>
+                                <p class="dashboard-section-desc">Your most recent designs</p>
+                            </div>
+                        </div>
+                        <div class="dashboard-hero-section">
+                            @foreach (var design in latestDesigns)
+                            {
+                                <div class="dashboard-hero-card">
+                                    <div class="dashboard-hero-image">
+                                        <img src="@design.FinalImageUrl" alt="@design.Prompt" />
+                                    </div>
+                                    <div class="dashboard-hero-content">
+                                        <div class="dashboard-hero-badge">LATEST</div>
+                                        <p class="dashboard-hero-title">@design.Prompt</p>
+                                        <p class="dashboard-hero-para">@design.ClothingType • @design.DisplayedColor</p>
+                                        <div class="dashboard-hero-meta">
+                                            <span class="dashboard-hero-meta-item">
+                                                <span class="material-symbols-outlined">favorite</span>
+                                                <span>@(currentUser?.TotalLikes ?? 0)</span>
+                                            </span>
+                                            <span class="dashboard-hero-meta-item">
+                                                <span class="material-symbols-outlined">schedule</span>
+                                                <span>@GetTimeAgo(design.CreatedAt)</span>
+                                            </span>
+                                        </div>
+                                    </div>
+                                </div>
+                            }
+                        </div>
+                    </div>
+                }
+
+                <div class="dashboard-stats-grid">
+                    <div class="dashboard-stat-card modern-card">
+                        <div class="dashboard-stat-icon-wrapper">
+                            <div class="dashboard-stat-icon gradient-1">
+                                <span class="material-symbols-outlined">grid_view</span>
+                            </div>
+                        </div>
+                        <div class="dashboard-stat-content">
+                            <h4 class="dashboard-stat-value">@totalDesigns</h4>
+                            <p class="dashboard-stat-label">Total Designs</p>
+                        </div>
+                    </div>
+                    <div class="dashboard-stat-card modern-card">
+                        <div class="dashboard-stat-icon-wrapper">
+                            <div class="dashboard-stat-icon gradient-2">
+                                <span class="material-symbols-outlined">favorite</span>
+                            </div>
+                        </div>
+                        <div class="dashboard-stat-content">
+                            <h4 class="dashboard-stat-value">@totalLikes</h4>
+                            <p class="dashboard-stat-label">Total Likes</p>
+                        </div>
+                    </div>
+                    <div class="dashboard-stat-card modern-card">
+                        <div class="dashboard-stat-icon-wrapper">
+                            <div class="dashboard-stat-icon gradient-3">
+                                <span class="material-symbols-outlined">trending_up</span>
+                            </div>
+                        </div>
+                        <div class="dashboard-stat-content">
+                            <h4 class="dashboard-stat-value">@recentDesignsCount</h4>
+                            <p class="dashboard-stat-label">This Week</p>
+                        </div>
+                    </div>
+                    <div class="dashboard-stat-card modern-card">
+                        <div class="dashboard-stat-icon-wrapper">
+                            <div class="dashboard-stat-icon gradient-4">
+                                <span class="material-symbols-outlined">share</span>
+                            </div>
+                        </div>
+                        <div class="dashboard-stat-content">
+                            <h4 class="dashboard-stat-value">@sharedDesigns</h4>
+                            <p class="dashboard-stat-label">Shared</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="dashboard-recent-section scroll-fade-in">
+                    <div class="dashboard-section-header">
+                        <div>
+                            <h3 class="dashboard-section-title">Recent Designs</h3>
+                            <p class="dashboard-section-desc">Your latest creations</p>
+                        </div>
+                        <a href="/collections" class="dashboard-view-all-btn">
+                            <span>View All</span>
+                            <span class="material-symbols-outlined">arrow_forward</span>
+                        </a>
+                    </div>
+                    <div class="dashboard-scrolling-container">
+                        <div class="dashboard-gradient-fade dashboard-left-fade"></div>
+                        <div class="dashboard-gradient-fade dashboard-right-fade"></div>
+                        <div class="dashboard-scrolling-content dashboard-pause-on-hover">
+                            <div class="dashboard-scrolling-items">
+                                @foreach (var design in recentDesigns)
+                                {
+                                    <div class="dashboard-recent-card">
+                                        <div class="dashboard-recent-image">
+                                            <img src="@design.FinalImageUrl" alt="@design.Prompt" />
+                                        </div>
+                                        <div class="dashboard-recent-body">
+                                            <div class="dashboard-recent-info">
+                                                <h4>@design.Prompt</h4>
+                                                <p>@design.ClothingType</p>
+                                            </div>
+                                            <button class="dashboard-remix-btn">
+                                                <span class="material-symbols-outlined">auto_awesome</span>
+                                                <span>Remix</span>
+                                            </button>
+                                        </div>
+                                    </div>
+                                }
+                            </div>
+                            <div class="dashboard-scrolling-items">
+                                @foreach (var design in recentDesigns)
+                                {
+                                    <div class="dashboard-recent-card">
+                                        <div class="dashboard-recent-image">
+                                            <img src="@design.FinalImageUrl" alt="@design.Prompt" />
+                                        </div>
+                                        <div class="dashboard-recent-body">
+                                            <div class="dashboard-recent-info">
+                                                <h4>@design.Prompt</h4>
+                                                <p>@design.ClothingType</p>
+                                            </div>
+                                            <button class="dashboard-remix-btn">
+                                                <span class="material-symbols-outlined">auto_awesome</span>
+                                                <span>Remix</span>
+                                            </button>
+                                        </div>
+                                    </div>
+                                }
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="dashboard-quick-actions scroll-fade-in">
+                    <div class="dashboard-section-header">
+                        <div>
+                            <h3 class="dashboard-section-title">Quick Actions</h3>
+                            <p class="dashboard-section-desc">Navigate quickly</p>
+                        </div>
+                    </div>
+                    <div class="dashboard-actions-grid">
+                        <button class="dashboard-quick-action-btn modern-action-card scroll-fade-in"
+                                @onclick="NavigateToCreate">
+                            <div class="dashboard-action-icon-wrapper">
+                                <span class="material-symbols-outlined">add_circle</span>
+                            </div>
+                            <span>Create New Design</span>
+                        </button>
+                        <button class="dashboard-quick-action-btn modern-action-card scroll-fade-in"
+                                @onclick="NavigateToCollections">
+                            <div class="dashboard-action-icon-wrapper">
+                                <span class="material-symbols-outlined">collections</span>
+                            </div>
+                            <span>View Collections</span>
+                        </button>
+                        <button class="dashboard-quick-action-btn modern-action-card scroll-fade-in"
+                                @onclick="NavigateToFeed">
+                            <div class="dashboard-action-icon-wrapper">
+                                <span class="material-symbols-outlined">explore</span>
+                            </div>
+                            <span>Explore Feed</span>
+                        </button>
+                        <button class="dashboard-quick-action-btn modern-action-card scroll-fade-in"
+                                @onclick="NavigateToOrders">
+                            <div class="dashboard-action-icon-wrapper">
+                                <span class="material-symbols-outlined">receipt</span>
+                            </div>
+                            <span>View Orders</span>
+                        </button>
+                    </div>
+                </div>
+            }
+        </section>
+    </div>
+</main>
+
+@code {
+
+
+
+    private bool isLoading = true;
+    private Design? latestDesign;
+    private List<Design> recentDesigns = new();
+    private List<Design> latestDesigns = new();
+    private User currentUser = new();
+    private int totalDesigns;
+    private int totalLikes;
+    private int recentDesignsCount;
+    private int sharedDesigns;
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            await Task.Delay(300);
+
+            await AuthService.InitializeAsync();
+            if (!AuthService.IsAuthenticated || AuthService.CurrentUser == null)
+            {
+                Nav.NavigateTo("/login");
+                return;
+
+            }
+            if (AuthService.CurrentUser != null)
+            {
+                var id = AuthService.CurrentUser!.Id;
+                var userdto = await UserRepository.GetByIdAsync(id);
+                currentUser = userdto!.ToModel();
+            }
+            await base.OnInitializedAsync();
+
+        }
+        catch (Exception ex)
+        {
+            Logger.LogInformation($"Error in Dashboard: {ex.Message}");
+        }
+        await base.OnInitializedAsync();
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            try
+            {
+                await LoadDashboardData();
+                isLoading = false;
+                StateHasChanged();
+            }
+            catch (Exception ex)
+            {
+                Logger.LogInformation($"Error in Dashboard.OnAfterRenderAsync: {ex.Message}");
+                isLoading = false;
+                StateHasChanged();
+            }
+        }
+        await base.OnAfterRenderAsync(firstRender);
+    }
+
+
+   
+    private async Task LoadDashboardData()
+    {
+        try
+        {
+            await Task.Delay(300);
+
+            await AuthService.InitializeAsync();
+            if (AuthService.CurrentUser != null)
+            {
+                var id = AuthService.CurrentUser!.Id;
+                var userdto = await UserRepository.GetByIdAsync(id);
+                currentUser = userdto!.ToModel();
+            }
+
+            var userDesignsDtos = await DesignRepository.GetByUserIdAsync(currentUser!.Id);
+            var allDesigns = userDesignsDtos.Select(dto => dto.ToModel()).ToList();
+
+            latestDesign = allDesigns.OrderByDescending(d => d.CreatedAt).FirstOrDefault();
+            latestDesigns = allDesigns.OrderByDescending(d => d.CreatedAt).Take(3).ToList();
+            recentDesigns = allDesigns.OrderByDescending(d => d.CreatedAt).Take(6).ToList();
+            totalDesigns = allDesigns.Count;
+
+            var likeDto = await LikeRepository.GetByUserIdAsync(currentUser.Id);
+            totalLikes = likeDto?.Select(x => x.ToModel()).ToList().Count ?? 0;
+
+            recentDesignsCount = allDesigns.Count(d => d.CreatedAt >= DateTime.UtcNow.AddDays(-7));
+            sharedDesigns = currentUser.TotalShares;
+
+            if (!allDesigns.Any())
+            {
+                latestDesign = null;
+                latestDesigns = new List<Design>();
+                recentDesigns = new List<Design>();
+                totalDesigns = 0;
+                recentDesignsCount = 0;
+                sharedDesigns = 0;
+            }
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError($"Error in Dashboard.LoadDashboardData: {ex.Message}");
+        }
+    }
+
+    private void NavigateToCreate()
+    {
+        Nav.NavigateTo("/create");
+    }
+
+    private void NavigateToCollections()
+    {
+        Nav.NavigateTo("/collections");
+    }
+
+    private void NavigateToFeed()
+    {
+        Nav.NavigateTo("/feed");
+    }
+
+    private void NavigateToOrders()
+    {
+        Nav.NavigateTo("/orders");
+    }
+
+
+    private string GetTimeAgo(DateTime dateTime)
+    {
+        var timeSpan = DateTime.UtcNow - dateTime;
+
+        if (timeSpan.TotalDays >= 30)
+            return $"{(int)(timeSpan.TotalDays / 30)} months ago";
+        if (timeSpan.TotalDays >= 1)
+            return $"{(int)timeSpan.TotalDays} days ago";
+        if (timeSpan.TotalHours >= 1)
+            return $"{(int)timeSpan.TotalHours} hours ago";
+        if (timeSpan.TotalMinutes >= 1)
+            return $"{(int)timeSpan.TotalMinutes} minutes ago";
+
+        return "Just now";
+    }
+}

@@ -1,0 +1,109 @@
+@inject TshirtMaker.Services.DeepLinkService DeepLinkService
+@inject NavigationManager NavigationManager
+
+<div class="share-social-compact-container">
+    <button class="share-social-compact-close" @onclick="OnClose" title="Close">
+        <span class="material-symbols-outlined">close</span>
+    </button>
+    <div class="share-social-compact-main">
+        <div class="share-social-compact-up">
+            <button class="share-social-compact-card share-social-compact-card1" @onclick="ShareToInstagram">
+                <svg
+                    class="share-social-compact-instagram"
+                    xmlns="http://www.w3.org/2000/svg"
+                    xmlns:xlink="http://www.w3.org/1999/xlink"
+                    viewBox="0,0,256,256"
+                    fill-rule="nonzero">
+                    <g
+                        fill-rule="nonzero"
+                        stroke="none"
+                        stroke-width="1"
+                        stroke-linecap="butt"
+                        stroke-linejoin="miter"
+                        stroke-miterlimit="10"
+                        stroke-dasharray=""
+                        stroke-dashoffset="0"
+                        font-family="none"
+                        font-weight="none"
+                        font-size="none"
+                        text-anchor="none"
+                        style="mix-blend-mode: normal">
+                        <g transform="scale(8.53333,8.53333)">
+                            <path
+                                d="M9.99805,3c-3.859,0 -6.99805,3.141 -6.99805,7.00195v9.99609c0,3.859 3.141,7 6.99805,7h9.99609c3.859,0 7,-3.141 7,-7v-9.99609c0,-3.859 -3.141,-7.00195 -7,-7.00195zM24,7h1c0.552,0 1,0.448 1,1v1c0,0.552 -0.448,1 -1,1h-1c-0.552,0 -1,-0.448 -1,-1v-1c0,-0.552 0.448,-1 1,-1zM15,9c3.309,0 6,2.691 6,6c0,3.309 -2.691,6 -6,6c-3.309,0 -6,-2.691 -6,-6c0,-3.309 2.691,-6 6,-6zM15,11c-2.20914,0 -4,1.79086 -4,4c0,2.20914 1.79086,4 4,4c2.20914,0 4,-1.79086 4,-4c0,-2.20914 -1.79086,-4 -4,-4z">
+                            </path>
+                        </g>
+                    </g>
+                </svg>
+            </button>
+            <button class="share-social-compact-card share-social-compact-card2" @onclick="ShareToTwitter">
+                <svg
+                    class="share-social-compact-twitter"
+                    viewBox="0 0 24 24"
+                    xmlns="http://www.w3.org/2000/svg">
+                    <path
+                        d="M23.643 4.937c-.835.37-1.732.62-2.675.733.962-.576 1.7-1.49 2.048-2.578-.9.534-1.897.922-2.958 1.13-.85-.904-2.06-1.47-3.4-1.47-2.572 0-4.658 2.086-4.658 4.66 0 .364.042.718.12 1.06-3.873-.195-7.304-2.05-9.602-4.868-.4.69-.63 1.49-.63 2.342 0 1.616.823 3.043 2.072 3.878-.764-.025-1.482-.234-2.11-.583v.06c0 2.257 1.605 4.14 3.737 4.568-.39.106-.803.163-1.227.163-.3 0-.593-.028-.877-.082.593 1.85 2.313 3.198 4.352 3.234-1.595 1.25-3.604 1.995-5.786 1.995-.376 0-.747-.022-1.112-.065 2.062 1.323 4.51 2.093 7.14 2.093 8.57 0 13.255-7.098 13.255-13.254 0-.2-.005-.402-.014-.602.91-.658 1.7-1.477 2.323-2.41z">
+                    </path>
+                </svg>
+            </button>
+        </div>
+        <div class="share-social-compact-down">
+            <button class="share-social-compact-card share-social-compact-card3" @onclick="ShareToFacebook">
+                <svg
+                    class="share-social-compact-facebook"
+                    xmlns="http://www.w3.org/2000/svg"
+                    viewBox="0 0 24 24">
+                    <path
+                        d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"
+                        fill="currentColor">
+                    </path>
+                </svg>
+            </button>
+            <button class="share-social-compact-card share-social-compact-card4" @onclick="ShareToWhatsApp">
+                <svg
+                    viewBox="0 0 24 24"
+                    xmlns="http://www.w3.org/2000/svg"
+                    class="share-social-compact-whatsapp">
+                    <path
+                        d="M19.001 4.908A9.817 9.817 0 0 0 11.992 2C6.534 2 2.085 6.448 2.08 11.908c0 1.748.458 3.45 1.321 4.956L2 22l5.255-1.377a9.916 9.916 0 0 0 4.737 1.206h.005c5.46 0 9.908-4.448 9.913-9.913A9.872 9.872 0 0 0 19 4.908h.001ZM11.992 20.15A8.216 8.216 0 0 1 7.797 19l-.3-.18-3.117.818.833-3.041-.196-.314a8.2 8.2 0 0 1-1.258-4.381c0-4.533 3.696-8.23 8.239-8.23a8.2 8.2 0 0 1 5.825 2.413 8.196 8.196 0 0 1 2.41 5.825c-.006 4.55-3.702 8.24-8.24 8.24Zm4.52-6.167c-.247-.124-1.463-.723-1.692-.808-.228-.08-.394-.123-.556.124-.166.246-.641.808-.784.969-.143.166-.29.185-.537.062-.247-.125-1.045-.385-1.99-1.23-.738-.657-1.232-1.47-1.38-1.716-.142-.247-.013-.38.11-.504.11-.11.247-.29.37-.432.126-.143.167-.248.248-.413.082-.167.043-.31-.018-.433-.063-.124-.557-1.345-.765-1.838-.2-.486-.404-.419-.557-.425-.142-.009-.309-.009-.475-.009a.911.911 0 0 0-.661.31c-.228.247-.864.845-.864 2.067 0 1.22.888 2.395 1.013 2.56.122.167 1.742 2.666 4.229 3.74.587.257 1.05.408 1.41.523.595.19 1.13.162 1.558.1.475-.072 1.464-.6 1.673-1.178.205-.58.205-1.075.142-1.18-.061-.104-.227-.165-.475-.29Z">
+                    </path>
+                </svg>
+            </button>
+        </div>
+    </div>
+</div>
+
+@code {
+    [Parameter]
+    public string ImageUrl { get; set; } = string.Empty;
+
+    [Parameter]
+    public string? CustomText { get; set; }
+
+    [Parameter]
+    public EventCallback OnClose { get; set; }
+
+    private void ShareToTwitter()
+    {
+        var shareUrl = DeepLinkService.GetTwitterShareUrl(ImageUrl, CustomText);
+        NavigationManager.NavigateTo(shareUrl, forceLoad: true);
+    }
+
+    private void ShareToWhatsApp()
+    {
+        var shareUrl = DeepLinkService.GetWhatsAppShareUrl(ImageUrl, CustomText);
+        NavigationManager.NavigateTo(shareUrl, forceLoad: true);
+    }
+
+    private void ShareToInstagram()
+    {
+        var shareUrl = DeepLinkService.GetInstagramShareUrl(ImageUrl, CustomText);
+        NavigationManager.NavigateTo(shareUrl, forceLoad: true);
+    }
+
+    private void ShareToFacebook()
+    {
+        var shareUrl = DeepLinkService.GetFacebookShareUrl(ImageUrl, CustomText);
+        NavigationManager.NavigateTo(shareUrl, forceLoad: true);
+    }
+}

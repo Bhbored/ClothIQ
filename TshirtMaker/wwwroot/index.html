@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="en" data-custom-theme="light">
+
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>TshirtMaker</title>
+    <base href="/" />
+    <link rel="icon" type="image/png" sizes="32x32" href="images/favicon.png">
+
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet"
+          integrity="sha384-sRIl4kxILFvY47J16cr9ZwB07vP4J8+LH7qKQnuqkuIAvNWLzeN8tE5YBujZqJLB" crossorigin="anonymous">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
+
+    <!-- Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800;900&family=Inter:wght@300;400;500;600;700&display=swap"
+          rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap"
+          rel="stylesheet">
+
+    <!-- App CSS -->
+    <link rel="stylesheet" href="css/app.css" />
+    <link rel="stylesheet" href="themes.css" />
+    <link href="TshirtMaker.styles.css" rel="stylesheet" />
+</head>
+
+<body>
+    <!-- Loading indicator -->
+    <div id="app">
+        <div class="splash-screen">
+            <div class="logo-container">
+                <div class="logo-icon">
+                    <i class="bi bi-shirt"></i>
+                </div>
+                <h1 class="app-title">TshirtMaker</h1>
+            </div>
+            <div class="loading-container">
+                <div class="loading-dots">
+                    <span class="dot dot-1"></span>
+                    <span class="dot dot-2"></span>
+                    <span class="dot dot-3"></span>
+                </div>
+                <p class="loading-text">Loading your creative space...</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Error UI -->
+    <div id="blazor-error-ui">
+        An unhandled error has occurred.
+        <a href="" class="reload">Reload</a>
+        <a class="dismiss">🗙</a>
+    </div>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"
+            integrity="sha384-FKyoEForCGlyvwx9Hj09JcYn3nv7wiPVlz7YYwJrWVcXK/BmnVDxM/D2scQbITxI"
+            crossorigin="anonymous"></script>
+
+    <!-- Blazor Framework -->
+    <script src="_framework/blazor.webassembly.js" autostart="false"></script>
+
+    <!-- App Scripts -->
+    <script src="theme.js"></script>
+    
+    <script>
+        // Initialize the splash screen and keep it visible until the app is fully ready
+        window.addEventListener('load', function () {
+            // Start Blazor but keep the splash screen visible
+            Blazor.start({
+                loadBootResource: function (type, name, defaultUri, integrity) {
+                    if (type === 'dotnetjs') {
+                        // Show the loading dots when downloading runtime
+                        const dots = document.querySelectorAll('.dot');
+                        if (dots && dots.length > 0) {
+                            dots.forEach(dot => {
+                                dot.style.display = 'inline-block';
+                            });
+                        }
+                    }
+                    if (type === 'assembly') {
+                        // Update loading text when downloading assemblies
+                        const loadingText = document.querySelector('.loading-text');
+                        if (loadingText) {
+                            loadingText.textContent = 'Preparing application...';
+                        }
+                    }
+                    
+                    // Return the default URI for all resources
+                    return defaultUri;
+                }
+            });
+        });
+    </script>
+</body>
+
+</html>

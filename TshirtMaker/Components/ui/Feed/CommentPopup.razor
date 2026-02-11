@@ -1,0 +1,126 @@
+@using TshirtMaker.Models.Social
+@using TshirtMaker.Models.Core
+@inject ICommentRepository CommentRepository
+@inject IUserRepository UserRepository
+@inject IPostRepository PostRepository
+<div class="comment-popup-overlay @(IsOpen ? "comment-popup-open" : "")" @onclick="ClosePopup">
+    <div class="comment-popup-container" @onclick:stopPropagation="true">
+        <div class="comment-popup-header">
+            <h3 class="comment-popup-title">Comments</h3>
+            <button class="comment-popup-close" @onclick="ClosePopup" title="Close">
+                <span class="material-symbols-outlined">close</span>
+            </button>
+        </div>
+
+        <div class="comment-popup-body">
+            @if (Post?.Comments != null && Post.Comments.Any())
+            {
+                @foreach (var comment in Post.Comments)
+                {
+                    <div class="comment-item">
+                        <div class="comment-user-avatar" style="background-image: url('@comment.User?.AvatarUrl')"></div>
+                        <div class="comment-content">
+                            <div class="comment-header">
+                                <span class="comment-username">@comment.User?.Username</span>
+                                <span class="comment-time">@GetTimeAgo(comment.CreatedAt)</span>
+                            </div>
+                            <p class="comment-text">@comment.Text</p>
+                        </div>
+                    </div>
+                }
+            }
+            else
+            {
+                <div class="comment-empty">
+                    <span class="material-symbols-outlined">chat_bubble_outline</span>
+                    <p>No comments yet. Be the first to comment!</p>
+                </div>
+            }
+        </div>
+
+        <div class="comment-popup-footer">
+            <div class="comment-input-container">
+                <div class="comment-user-avatar-small" style="background-image: url('@CurrentUser?.AvatarUrl')"></div>
+                <input type="text" class="comment-input" placeholder="Add a comment..." @bind="commentText"
+                       @bind:event="oninput" @onkeypress="HandleKeyPress" />
+                <button class="comment-send-btn" @onclick="AddComment"
+                        disabled="@string.IsNullOrWhiteSpace(commentText)">
+                    <span class="material-symbols-outlined">send</span>
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@code {
+    [Parameter] public Post? Post { get; set; }
+    [Parameter] public User? CurrentUser { get; set; }
+    [Parameter] public bool IsOpen { get; set; }
+    [Parameter] public EventCallback OnClose { get; set; }
+    [Parameter] public EventCallback<Post> OnAddComment { get; set; }
+
+    private string commentText = string.Empty;
+
+    private async Task ClosePopup()
+    {
+        await OnClose.InvokeAsync();
+    }
+
+    private async Task HandleKeyPress(KeyboardEventArgs e)
+    {
+        if (e.Key == "Enter" && !string.IsNullOrWhiteSpace(commentText))
+        {
+            await AddComment();
+        }
+    }
+
+    private async Task AddComment()
+    {
+        if (string.IsNullOrWhiteSpace(commentText) || Post == null || CurrentUser == null)
+            return;
+
+        if (Post.Comments == null)
+            Post.Comments = new List<Comment>();
+
+        if (CurrentUser.Comments == null)
+            CurrentUser.Comments = new List<Comment>();
+
+        var newComment = new Comment
+        {
+            Id = Guid.NewGuid(),
+            UserId = CurrentUser.Id,
+            PostId = Post.Id,
+            Text = commentText,
+            User = CurrentUser,
+            Post = Post,
+            CreatedAt = DateTime.UtcNow
+        };
+
+        Post.Comments.Add(newComment);
+        CurrentUser.Comments.Add(newComment);
+        StateHasChanged();
+        _ = Task.Run(async () =>
+        {
+            await CommentRepository.CreateAsync(CommentDto.FromModel(newComment));
+            await PostRepository.UpdateAsync(PostDto.FromModel(Post));
+            await UserRepository.UpdateAsync(UserDto.FromModel(CurrentUser));
+
+        });
+        commentText = string.Empty;
+        await OnAddComment.InvokeAsync(Post);
+    }
+
+    private string GetTimeAgo(DateTime dateTime)
+    {
+        var timeSpan = DateTime.UtcNow - dateTime;
+
+        if (timeSpan.TotalDays >= 1)
+            return $"{(int)timeSpan.TotalDays}d";
+        if (timeSpan.TotalHours >= 1)
+            return $"{(int)timeSpan.TotalHours}h";
+        if (timeSpan.TotalMinutes >= 1)
+            return $"{(int)timeSpan.TotalMinutes}m";
+
+        return "now";
+    }
+}

@@ -1,0 +1,19 @@
+using System.ComponentModel.DataAnnotations;
+using TshirtMaker.Models.Core;
+
+namespace TshirtMaker.Models.Social
+{
+    public class Like : BaseEntity
+    {
+        [Required]
+        public Guid UserId { get; set; }
+
+        [Required]
+        public Guid PostId { get; set; }
+
+        public DateTime LikedAt { get; set; } = DateTime.UtcNow;
+
+        public virtual User? User { get; set; }
+        public virtual Post? Post { get; set; }
+    }
+}

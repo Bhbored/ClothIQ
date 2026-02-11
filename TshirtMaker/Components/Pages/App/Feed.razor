@@ -1,0 +1,631 @@
+@page "/feed"
+@layout MainLayout
+@inject IPostRepository PostRepository
+@inject IDesignRepository DesignRepository
+@inject IUserRepository UserRepository
+@inject ILikeRepository LikeRepository
+@inject IBookmarkRepository BookmarkRepository
+@inject ICommentRepository CommentRepository
+@inject ICollectionRepository CollectionRepository
+@inject AuthStateService Auth
+@inject ILogger<Feed> Logger
+@inject NavigationManager Nav
+@using TshirtMaker.Components.ui.Feed
+@using TshirtMaker.Tests
+@using TshirtMaker.Services
+
+<PageTitle>TshirtMaker - Community Feed</PageTitle>
+
+<main class="feed-main">
+    @if (isLoading)
+    {
+        <FeedLoader Message="Loading Inspiration" IsCentered="true" />
+    }
+    else
+    {
+        <div class="feed-container">
+            <div class="feed-header">
+                <div class="feed-header-content">
+                    <h2 class="feed-title">Community Feed</h2>
+                    <p class="feed-subtitle">Discover the latest AI-generated fashion trends.</p>
+                </div>
+                <div class="feed-filters">
+                    <button class="feed-filter-btn @(activeFilter == "trending" ? "active" : "")"
+                            @onclick="SetTrendingFilter">
+                        Trending
+                    </button>
+                    <button class="feed-filter-btn @(activeFilter == "new" ? "active" : "")" @onclick="SetNewFilter">
+                        New
+                    </button>
+                    <button class="feed-filter-btn @(activeFilter == "featured" ? "active" : "")"
+                            @onclick="SetFeaturedFilter">
+                        My Posts
+                    </button>
+                </div>
+            </div>
+
+            <div class="feed-grid">
+                @foreach (var x in feedPost)
+                {
+                    var isMyPost = x.PosterId == currentUser.Id;
+                    <div class="feed-card">
+                        <div class="feed-card-image">
+                            <div class="feed-card-image-bg" style="background-image: url('@x.Design!.FinalImageUrl')">
+                            </div>
+                            <div class="feed-card-actions">
+                                @if (isMyPost)
+                                {
+                                    <div class="feed-my-post-badge">
+                                        <span>My Post</span>
+                                    </div>
+                                }
+                                else
+                                {
+                                    <button class="feed-action-btn @(IsDesignInCollection(x.Design!) ? "feed-saved" : "")"
+                                            title="Save To Collection" @onclick="() => SaveToCollection(x.Design!)">
+                                        <span class="material-symbols-outlined">save</span>
+                                    </button>
+                                }
+                            </div>
+
+                        </div>
+                        <div class="feed-card-body">
+                            <div class="feed-card-header">
+                                <div class="feed-user-info">
+                                    <div class="feed-user-avatar" style="background-image: url('@x.Poster!.AvatarUrl')">
+                                    </div>
+                                    <div>
+                                        <p class="feed-username">@x.Poster!.Username</p>
+                                    </div>
+                                </div>
+
+                                @if (!isMyPost && x.AllowRemix)
+                                {
+                                    <button class="feed-remix-btn" @onclick="@(() => NavigateToRemix(x))">
+                                        <span class="material-symbols-outlined">bolt</span>
+                                        Remix
+                                    </button>
+                                }
+
+                            </div>
+                            <div class="feed-prompt-box">
+                                <p class="feed-prompt-text">"@x.Description"</p>
+                            </div>
+                            <div class="feed-card-footer">
+                                <div class="feed-stats">
+                                    <div class="feed-stat-item">
+                                        <button class="material-symbols-outlined feed-stat-icon @(IsPostLiked(x) ? "feed-liked" : "")"
+                                                type="button" @onclick="() => LikePost(x)">
+                                            favorite
+                                        </button>
+                                        <span class="feed-stat-value">@FormatNumber(x.LikesCount)</span>
+                                    </div>
+                                    @if (!isMyPost)
+                                    {
+                                        <div class="feed-stat-item">
+                                            <button class="material-symbols-outlined feed-stat-icon @(IsPostBookmarked(x) ? "feed-bookmarked" : "")"
+                                                    type="button" @onclick="() => BookmarkPost(x)">
+                                                cyclone
+                                            </button>
+                                            <span class="feed-stat-value">@FormatNumber(x.BookmarksCount)</span>
+                                        </div>
+                                    }
+                                    <div class="feed-stat-item">
+                                        <button class="material-symbols-outlined feed-stat-icon" type="button"
+                                                @onclick="() => OpenCommentPopup(x)">
+                                            chat
+                                        </button>
+                                        <span class="feed-stat-value">@FormatNumber(x.CommentsCount)</span>
+                                    </div>
+                                    @if (isMyPost)
+                                    {
+                                        <div class="feed-stat-item">
+                                            <button class="material-symbols-outlined feed-stat-icon feed-delete-icon" type="button"
+                                                    @onclick="() => OpenDeleteConfirmation(x.Id)">
+                                                delete
+                                            </button>
+                                        </div>
+                                    }
+                                </div>
+                                <span class="feed-timestamp">@GetTimeAgo(x.CreatedAt)</span>
+                            </div>
+                        </div>
+                    </div>
+                }
+            </div>
+
+            @* <FeedLoader Message="Loading Inspiration" /> *@
+        </div>
+    }
+
+    @if (!isLoading)
+    {
+        <div class="feed-fab">
+            <button class="feed-fab-btn" @onclick="OpenCreatePostPopup" title="Create New Post">
+                <span class="material-symbols-outlined">add</span>
+                <div class="feed-fab-tooltip">Create New Post</div>
+            </button>
+        </div>
+    }
+</main>
+
+<CommentPopup Post="@selectedPostForComments" CurrentUser="@currentUser" IsOpen="@isCommentPopupOpen"
+              OnClose="CloseCommentPopup" OnAddComment="AddComment" />
+
+<CreatePostPopup Designs="@userDesigns" IsOpen="@isCreatePostPopupOpen" OnClose="CloseCreatePostPopup"
+                 CurrentUser="currentUser" OnPost="HandlePostCreation" />
+
+<ConfirmDeletePopup Message="@deleteConfirmationMessage" IsOpen="@isDeleteConfirmationOpen"
+                    OnClose="CloseDeleteConfirmation" OnConfirm="HandleDeletePost" ItemId="@selectedPostIdForDelete" />
+
+
+@code {
+    private List<Post> feedPost = new();
+    private List<Post> allPosts = new();
+    private string activeFilter = "trending";
+    private User currentUser = new();
+    private List<Post> userPosts = [];
+    private List<Design> userDesigns = [];
+    private List<Collection> userCollections = [];
+    private bool isCommentPopupOpen = false;
+    private bool isCreatePostPopupOpen = false;
+    private Post? selectedPostForComments;
+    private bool isDeleteConfirmationOpen = false;
+    private bool isLoading = true;
+    private Guid selectedPostIdForDelete = Guid.Empty;
+    private string deleteConfirmationMessage = "Are you sure you want to delete this post? This action cannot be undone.";
+
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            await Task.Delay(300);
+
+            await Auth.InitializeAsync();
+            if (!Auth.IsAuthenticated || Auth.CurrentUser == null)
+            {
+                Nav.NavigateTo("/login");
+                return;
+
+            }
+            if (Auth.CurrentUser != null)
+            {
+                var id = Auth.CurrentUser!.Id;
+                var userdto = await UserRepository.GetByIdAsync(id);
+                currentUser = userdto!.ToModel();
+            }
+            await base.OnInitializedAsync();
+
+        }
+        catch (Exception ex)
+        {
+            Logger.LogInformation($"Error in Feed: {ex.Message}");
+        }
+        await base.OnInitializedAsync();
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            try
+            {
+
+                await LoadFeedData();
+                isLoading = false;
+                StateHasChanged();
+            }
+            catch (Exception ex)
+            {
+                Logger.LogInformation($"Error in Feed.OnAfterRenderAsync: {ex.Message}");
+                feedPost = new List<Post>();
+                isLoading = false;
+                StateHasChanged();
+            }
+        }
+        await base.OnAfterRenderAsync(firstRender);
+    }
+
+    private async Task LoadFeedData()
+    {
+        try
+        {
+            await Task.Delay(300);
+
+            await Auth.InitializeAsync();
+            if (Auth.CurrentUser != null)
+            {
+                var id = Auth.CurrentUser!.Id;
+                var userdto = await UserRepository.GetByIdAsync(id);
+                currentUser = userdto!.ToModel();
+            }
+
+            allPosts.Clear();
+            var allPostDtos = await PostRepository.GetAllPostsAsync();
+            allPosts = allPostDtos.Select(dto => dto.ToModel()).ToList();
+
+            var allDesignsDtos = await DesignRepository.GetAllAsync();
+            var allDesigns = allDesignsDtos.Select(DTOs => DTOs.ToModel()).ToList();
+
+            var allLikesDtos = await LikeRepository.GetAllAsync();
+            var allLikes = allLikesDtos.Select(x => x.ToModel()).ToList();
+
+            var allUsersDtos = await UserRepository.GetAllAsync();
+            var allUsers = allUsersDtos.Select(x => x.ToModel()).ToList();
+
+            var allBookmarksDtos = await BookmarkRepository.GetAllAsync();
+            var allBookmarks = allBookmarksDtos.Select(y => y.ToModel()).ToList();
+
+            var allCommentsDtos = await CommentRepository.GetAllAsync();
+            var allComments = allCommentsDtos.Select(x => x.ToModel()).ToList();
+
+            var userCollectionsDtos = await CollectionRepository.GetByUserIdAsync(currentUser.Id);
+            userCollections = userCollectionsDtos.Select(DTOs => DTOs.ToModel()).ToList();
+            foreach (var x in allPosts)
+            {
+                x.Design = allDesigns.Where((y) => y.Id == x.DesignId).FirstOrDefault();
+                x.Poster = allUsers.Where((y) => y.Id == x.PosterId).FirstOrDefault();
+                x.Likes = allLikes.Where((like) => like.PostId == x.Id).ToList();
+                x.Bookmarks = allBookmarks.Where((y) => y.PostId == x.Id).ToList();
+                x.Comments = allComments.Where((y) => y.PostId == x.Id).ToList();
+            }
+
+
+            userPosts = allPosts.Where((x) => x.PosterId == currentUser.Id).ToList() ?? [];
+
+            var userDesignsDto = await DesignRepository.GetByUserIdAsync(currentUser.Id);
+            userDesigns = userDesignsDto.Select(x => x.ToModel()).ToList();
+            if (!allPosts.Any())
+            {
+                feedPost = new List<Post>();
+                isLoading = false;
+                StateHasChanged();
+                return;
+            }
+            else
+            {
+                feedPost = allPosts.OrderByDescending(d => d.LikesCount).Take(12).ToList();
+            }
+
+
+        }
+        catch (Exception ex)
+        {
+            Logger.LogInformation($"Error in Feed.LoadFeedData: {ex.Message}");
+            feedPost = [];
+        }
+    }
+    #region ui controllers
+
+
+    void SwitchFilter()
+    {
+        feedPost = activeFilter switch
+        {
+            "trending" => allPosts.OrderByDescending(d => d.LikesCount).Take(12).ToList(),
+            "new" => allPosts.OrderByDescending(d => d.CreatedAt).Take(12).ToList(),
+            "featured" => userPosts,
+            _ => allPosts.OrderByDescending(d => d.LikesCount).Take(12).ToList()
+        };
+    }
+
+    private async Task SetFilter(string filter)
+    {
+        activeFilter = filter;
+        SwitchFilter();
+        StateHasChanged();
+    }
+
+    private async Task SetTrendingFilter()
+    {
+        await SetFilter("trending");
+        StateHasChanged();
+    }
+
+    private async Task SetNewFilter()
+    {
+        await SetFilter("new");
+        StateHasChanged();
+
+    }
+
+    private async Task SetFeaturedFilter()
+    {
+        await SetFilter("featured");
+        StateHasChanged();
+
+    }
+
+
+
+    private string FormatNumber(int number)
+    {
+        if (number >= 1000)
+            return $"{number / 1000.0:F1}k";
+        return number.ToString();
+    }
+
+    private string GetTimeAgo(DateTime dateTime)
+    {
+        var timeSpan = DateTime.UtcNow - dateTime;
+
+        if (timeSpan.TotalDays >= 1)
+            return $"{(int)timeSpan.TotalDays} day{((int)timeSpan.TotalDays > 1 ? "s" : "")} ago";
+        if (timeSpan.TotalHours >= 1)
+            return $"{(int)timeSpan.TotalHours} hour{((int)timeSpan.TotalHours > 1 ? "s" : "")} ago";
+        if (timeSpan.TotalMinutes >= 1)
+            return $"{(int)timeSpan.TotalMinutes} minute{((int)timeSpan.TotalMinutes > 1 ? "s" : "")} ago";
+
+        return "Just now";
+    }
+
+    private void OpenCreatePostPopup()
+    {
+        isCreatePostPopupOpen = true;
+        StateHasChanged();
+    }
+
+    private void CloseCreatePostPopup()
+    {
+        isCreatePostPopupOpen = false;
+        StateHasChanged();
+    }
+
+    private void NavigateToRemix(Post post)
+    {
+        PublicData.PublicPresets.RemixedDesign = new()
+        {
+            ClothingType = post.Design!.ClothingType,
+            Color = post.Design.Color,
+            Size = post.Design.Size,
+            Material = post.Design.Material,
+            StylePreset = post.Design.StylePreset,
+        };
+        Nav.NavigateTo($"/create");
+    }
+
+    private void OpenCommentPopup(Post post)
+    {
+        selectedPostForComments = post;
+        isCommentPopupOpen = true;
+        StateHasChanged();
+    }
+
+    private void CloseCommentPopup()
+    {
+        isCommentPopupOpen = false;
+        selectedPostForComments = null;
+        StateHasChanged();
+    }
+
+    private void AddComment(Post post)
+    {
+
+        StateHasChanged();
+    }
+
+    private void OpenDeleteConfirmation(Guid postId)
+    {
+        selectedPostIdForDelete = postId;
+        isDeleteConfirmationOpen = true;
+        StateHasChanged();
+    }
+
+    private void CloseDeleteConfirmation()
+    {
+        isDeleteConfirmationOpen = false;
+        selectedPostIdForDelete = Guid.Empty;
+        StateHasChanged();
+    }
+
+    #endregion
+
+
+    private bool IsPostLiked(Post post)
+    {
+        if (currentUser == null || currentUser.Id == Guid.Empty)
+            return false;
+
+        if (currentUser.LikesGiven == null)
+            return false;
+
+        return post.Likes.Any(x => x.UserId == currentUser.Id);
+    }
+
+    private async Task LikePost(Post post)
+    {
+        if (currentUser == null || currentUser.Id == Guid.Empty)
+            return;
+
+        try
+        {
+
+            var alreadyLiked = IsPostLiked(post);
+
+            if (alreadyLiked)
+            {
+                var likeToRemove = post.Likes
+                .FirstOrDefault(x => x.UserId == currentUser.Id);
+                if (likeToRemove != null)
+                {
+                    post.Likes!.Remove(likeToRemove);
+                    currentUser.LikesGiven.Remove(likeToRemove);
+
+                    StateHasChanged();
+                    _ = Task.Run(async () =>
+                     {
+                         await PostRepository.UpdateAsync(PostDto.FromModel(post));
+                         await LikeRepository.DeleteAsync((LikeDto.FromModel(likeToRemove)).Id);
+                     });
+                }
+            }
+            else
+            {
+                var newlike = new Like
+                {
+                    UserId = currentUser.Id,
+                    PostId = post.Id,
+                    User = currentUser,
+                    Post = post,
+                    LikedAt = DateTime.UtcNow,
+                    CreatedAt = DateTime.UtcNow
+                };
+
+                post.Likes!.Add(newlike);
+
+                StateHasChanged();
+
+                _ = Task.Run(async () =>
+               {
+                   await PostRepository.UpdateAsync(PostDto.FromModel(post));
+                   await LikeRepository.CreateAsync(LikeDto.FromModel(newlike));
+               });
+
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine(ex.Message);
+        }
+
+    }
+
+    private bool IsPostBookmarked(Post post)
+    {
+        if (currentUser == null || currentUser.Id == Guid.Empty)
+            return false;
+
+        if (currentUser.Bookmarks == null)
+            return false;
+
+        return post.Bookmarks.Any(x => x.UserId == currentUser.Id);
+    }
+
+    private async Task BookmarkPost(Post post)
+    {
+        if (currentUser == null || currentUser.Id == Guid.Empty)
+            return;
+        var alreadyBookmarked = IsPostBookmarked(post);
+        if (alreadyBookmarked)
+        {
+            var bookmarkToRemove = post.Bookmarks
+            .FirstOrDefault(x => x.UserId == currentUser.Id);
+            if (bookmarkToRemove != null)
+            {
+                post.Bookmarks.Remove(bookmarkToRemove);
+                currentUser.Bookmarks.Remove(bookmarkToRemove);
+                StateHasChanged();
+                _ = Task.Run(async () =>
+                {
+                    await BookmarkRepository.DeleteAsync(bookmarkToRemove.Id);
+                    await PostRepository.UpdateAsync(PostDto.FromModel(post));
+                    await UserRepository.UpdateAsync(UserDto.FromModel(currentUser));
+
+                });
+
+            }
+        }
+        else
+        {
+            var newBookmark = new Bookmark
+            {
+                UserId = currentUser.Id,
+                PostId = post.Id,
+                User = currentUser,
+                Post = post,
+            };
+
+            post.Bookmarks!.Add(newBookmark);
+            currentUser.Bookmarks!
+            .Add(newBookmark);
+            StateHasChanged();
+
+            _ = Task.Run(async () =>
+               {
+                   await BookmarkRepository.CreateAsync(BookmarkDto.FromModel(newBookmark));
+                   await PostRepository.UpdateAsync(PostDto.FromModel(post));
+                   await UserRepository.UpdateAsync(UserDto.FromModel(currentUser));
+
+               });
+        }
+
+        StateHasChanged();
+    }
+
+    private bool IsDesignInCollection(Design design)
+    {
+        if (currentUser == null || currentUser.Id == Guid.Empty)
+            return false;
+
+        if (userCollections == null)
+            return false;
+        return userCollections.Any((x) => x.CopiedDesignId == design.Id);
+    }
+
+    private async Task SaveToCollection(Design design)
+    {
+        if (currentUser == null || currentUser.Id == Guid.Empty)
+            return;
+
+        var alreadySaved = IsDesignInCollection(design);
+        if (alreadySaved)
+        {
+            var collectionToRemove = userCollections
+            .FirstOrDefault(x => x.CopiedDesignId == design.Id);
+            if (collectionToRemove != null)
+            {
+                userCollections.Remove(collectionToRemove);
+                StateHasChanged();
+                _ = await CollectionRepository.DeleteAsync(collectionToRemove.Id);
+
+            }
+        }
+        else
+        {
+            var newCollection = new Collection
+            {
+                UserId = currentUser.Id,
+                CopiedDesignId = design.Id,
+                User = currentUser,
+                CopiedDesign = design
+            };
+
+            userCollections.Add(newCollection);
+            StateHasChanged();
+            _ = await CollectionRepository.CreateAsync(CollectionDto.FromModel(newCollection));
+        }
+
+        StateHasChanged();
+    }
+
+
+    async Task HandlePostCreation(Post newPost)
+    {
+        await PostRepository.CreateAsync(PostDto.FromModel(newPost));
+        currentUser.Posts.Add(newPost);
+        await UserRepository.UpdateAsync(UserDto.FromModel(currentUser));
+        await LoadFeedData();
+        StateHasChanged();
+    }
+
+    async Task ConfirmPost()
+    {
+        await Task.Delay(300);
+        await LoadFeedData();
+        StateHasChanged();
+    }
+
+
+    private async Task HandleDeletePost(Guid postId)
+    {
+        var posttodelete = currentUser.Posts.Where((x) => x.Id == postId).FirstOrDefault();
+        currentUser.Posts.Remove(posttodelete!);
+
+        await PostRepository.DeleteAsync(postId);
+        await UserRepository.UpdateAsync(UserDto.FromModel(currentUser));
+        await LoadFeedData();
+
+        StateHasChanged();
+    }
+}

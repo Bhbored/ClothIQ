@@ -1,0 +1,199 @@
+@page "/signup"
+@layout EmptyLayout
+@using TshirtMaker.Services
+@using TshirtMaker.Services.Supabase
+@using TshirtMaker.Models
+@inject NavigationManager Navigation
+@inject SupabaseAuthService SupabaseAuth
+@inject AuthStateService Auth
+
+<div class="login-container">
+    <!-- Left Side: Visual Showcase -->
+    <div class="login-visual-side">
+        <div class="visual-background">
+            <div class="iq-pattern"></div>
+            <div class="gradient-blur gradient-blur-1"></div>
+            <div class="gradient-blur gradient-blur-2"></div>
+        </div>
+
+        <div class="brand-logo">
+            <div class="logo-icon">
+                <span style="font-size: 1.25rem;">✨</span>
+            </div>
+            <h2 class="brand-name">ClothIQ</h2>
+        </div>
+
+        <div class="visual-content">
+            <div class="hero-image-container">
+                <div class="hero-image">
+                    <div class="hero-image-inner"
+                        style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuC8zmD3xZIKdIbFvfkR7vdS0kJ2tcyVbltsg3rIWZ-xjQ-B_9u2rzh5dRBG0A9oMiX-ocmhiZY1k9L5v98tcAL5N5Wwh3m-oD5kS0tOTNQE0eTTp6MvTmNBlBd6C5iM3fXIywEgRKJ0U1mDUsL2Z5XyeKBNjJ0_8PktpVwRoF-K8EZfSLWrtyAlcurrAuNtjR0x1kjFZt--jAglKPVYXcIqIkf4JEPrS6ycpqAWFA9O8UXTGWor_RNRj25CoxIe2qqdpa1HhmMLEZ3u");'>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="visual-footer">
+            <p class="visual-tagline">Generative Fashion</p>
+            <h3 class="visual-title">Start your creative journey with <span class="primary-text">AI-powered
+                    design.</span></h3>
+        </div>
+    </div>
+
+    <!-- Right Side: Sign Up Form -->
+    <div class="login-form-side">
+        <div class="form-background">
+            <div class="iq-pattern"></div>
+        </div>
+
+        <div class="form-content">
+            <!-- Mobile Logo -->
+            <div class="mobile-logo">
+                <div class="logo-icon">
+                    <span class="material-symbols-outlined">auto_awesome</span>
+                </div>
+                <h2 class="brand-name">ClothIQ</h2>
+            </div>
+
+            <div class="form-header">
+                <h1 class="form-title">Create Account</h1>
+                <p class="form-subtitle">Join us and start creating unique designs.</p>
+            </div>
+
+            <!-- Glassmorphism Card -->
+            <div class="glass-card">
+                @if (!string.IsNullOrEmpty(error))
+                {
+                    <div class="alert alert-danger">@error</div>
+                }
+                @if (!string.IsNullOrEmpty(successMessage))
+                {
+                    <div class="alert alert-success">@successMessage</div>
+                }
+
+                <EditForm Model="SignUpModel" OnValidSubmit="HandleSignUp" OnInvalidSubmit="HandleInvalidSubmit">
+                    <DataAnnotationsValidator />
+
+                    <!-- Username Field -->
+                    <div class="form-field">
+                        <label class="form-label">Username</label>
+                        <div class="input-wrapper">
+                            <span class="input-icon material-symbols-outlined">person</span>
+                            <InputText @bind-Value="SignUpModel.Username" class="login-input"
+                                       placeholder="Choose a username" autocomplete="new-username"
+                                style="width: 100%; background-color: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 9999px; height: 3.5rem; padding-left: 3rem; padding-right: 1.5rem; color: white; font-size: 1rem; transition: all 0.3s ease; outline: none; box-sizing: border-box;" />
+                        </div>
+                        @if (showValidationMessages)
+                        {
+                            <ValidationMessage For="@(() => SignUpModel.Username)" />
+                        }
+                    </div>
+
+                    <!-- Email Field -->
+                    <div class="form-field">
+                        <label class="form-label">Email Address</label>
+                        <div class="input-wrapper">
+                            <span class="input-icon material-symbols-outlined">mail</span>
+                            <InputText @bind-Value="SignUpModel.Email" class="login-input"
+                                       placeholder="name@example.com" autocomplete="new-email"
+                                style="width: 100%; background-color: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 9999px; height: 3.5rem; padding-left: 3rem; padding-right: 1.5rem; color: white; font-size: 1rem; transition: all 0.3s ease; outline: none; box-sizing: border-box;" />
+                        </div>
+                        @if (showValidationMessages)
+                        {
+                            <ValidationMessage For="@(() => SignUpModel.Email)" />
+                        }
+                    </div>
+
+                    <!-- Password Field -->
+                    <div class="form-field">
+                        <label class="form-label">Password</label>
+                        <div class="input-wrapper">
+                            <span class="input-icon material-symbols-outlined">lock</span>
+                            <InputText type="password" @bind-Value="SignUpModel.Password" class="login-input"
+                                placeholder="••••••••" autocomplete="new-password"
+                                style="width: 100%; background-color: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 9999px; height: 3.5rem; padding-left: 3rem; padding-right: 1.5rem; color: white; font-size: 1rem; transition: all 0.3s ease; outline: none; box-sizing: border-box;" />
+                        </div>
+                        @if (showValidationMessages)
+                        {
+                            <ValidationMessage For="@(() => SignUpModel.Password)" />
+                        }
+                    </div>
+
+                    <!-- Sign Up Button -->
+                    <button type="submit" class="submit-button" disabled="@isSigningUp">
+                        @if (isSigningUp)
+                        {
+                            <LoadingSpinner />
+                        }
+                        else
+                        {
+                            <span>Create Account</span>
+                            <span class="material-symbols-outlined">arrow_forward</span>
+                        }
+                    </button>
+                </EditForm>
+            </div>
+
+            <!-- Footer CTA -->
+            <div class="form-footer">
+                <p class="footer-text">
+                    Already have an account?
+                    <a class="footer-link" href="/login">Sign In</a>
+                </p>
+            </div>
+        </div>
+    </div>
+</div>
+
+@code {
+    public SignUpModel SignUpModel { get; set; } = new SignUpModel();
+    string error = "";
+    string successMessage = "";
+    bool showValidationMessages = false;
+    bool isSigningUp = false;
+
+    void HandleInvalidSubmit()
+    {
+        showValidationMessages = true;
+    }
+
+    async Task HandleSignUp()
+    {
+        error = "";
+        showValidationMessages = true;
+        isSigningUp = true;
+
+        try
+        {
+            var metadata = new Dictionary<string, object>
+{
+{ "username", SignUpModel.Username }
+};
+
+            var userDto = await SupabaseAuth.SignUpAsync(SignUpModel.Email, SignUpModel.Password, metadata);
+            if (userDto is null)
+            {
+                error = "Failed to create account. Email may already exist.";
+                isSigningUp = false;
+                return;
+            }
+
+            var session = SupabaseAuth.GetSession();
+            if (session == null)
+            {
+                successMessage = "Account created! Please check your email to confirm your account before logging in.";
+                isSigningUp = false;
+                return;
+            }
+
+            var user = userDto.ToModel();
+            Auth.SetUser(user);
+            Navigation.NavigateTo("/dashboard");
+        }
+        catch (Exception ex)
+        {
+            error = $"Failed to create account: {ex.Message}";
+            isSigningUp = false;
+        }
+    }
+}

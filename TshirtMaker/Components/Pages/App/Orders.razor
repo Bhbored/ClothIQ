@@ -1,0 +1,439 @@
+@page "/orders"
+@layout MainLayout
+@inject TestDataService DataService
+@inject NavigationManager Nav
+@inject AuthStateService Auth
+@using TshirtMaker.Services
+
+<PageTitle>TshirtMaker - Order Tracking</PageTitle>
+
+<main class="orders-main">
+    <!-- Overlay for Under Construction -->
+    <div class="orders-overlay">
+        <div class="overlay-content">
+            <div class="overlay-icons">
+                <i class="bi bi-gear-fill gear-icon spinning-gear"></i>
+                <i class="bi bi-gear-fill gear-icon spinning-gear reverse-spin"></i>
+            </div>
+            <p class="overlay-text">Under Development</p>
+            <p class="overlay-subtext">Feature coming soon</p>
+        </div>
+    </div>
+    <div class="orders-container">
+      
+        <div class="orders-header">
+            <div class="orders-header-content">
+                <h1 class="orders-title">Order Tracking</h1>
+                <p class="orders-subtitle">
+                    You have <span class="orders-highlight">@activeOrdersCount active shipments</span> currently in transit.
+                </p>
+            </div>
+            <div class="orders-header-actions">
+                <button class="orders-action-btn" @onclick="NavigateToSupport">
+                    <span class="material-symbols-outlined">support_agent</span>
+                    Support
+                </button>
+                <button class="orders-action-btn orders-primary-btn" @onclick="NavigateToCreate">
+                    <span class="material-symbols-outlined">add</span>
+                    New Order
+                </button>
+            </div>
+        </div>
+
+        <div class="orders-filters">
+            <button class="orders-filter-chip @(activeFilter == "all" ? "active" : "")" @onclick="SetAllFilter">
+                All Orders
+            </button>
+            <button class="orders-filter-chip @(activeFilter == "production" ? "active" : "")" @onclick="SetProductionFilter">
+                In Production
+                <span class="orders-status-dot orders-dot-amber"></span>
+            </button>
+            <button class="orders-filter-chip @(activeFilter == "shipped" ? "active" : "")" @onclick="SetShippedFilter">
+                Shipped
+                <span class="orders-status-dot orders-dot-blue"></span>
+            </button>
+            <button class="orders-filter-chip @(activeFilter == "delivered" ? "active" : "")" @onclick="SetDeliveredFilter">
+                Delivered
+                <span class="orders-status-dot orders-dot-green"></span>
+            </button>
+            <button class="orders-filter-chip @(activeFilter == "cancelled" ? "active" : "")" @onclick="SetCancelledFilter">
+                Cancelled
+            </button>
+        </div>
+
+        <div class="orders-list">
+            @foreach (var order in filteredOrders)
+            {
+                <div class="orders-card @(expandedOrderId == order.Id ? "expanded" : "")">
+                    <div class="orders-card-header">
+                        <div class="orders-card-grid">
+                            <div class="orders-image-col">
+                                <div class="orders-image" style="background-image: url('@order.ImageUrl')"></div>
+                            </div>
+                            <div class="orders-info-col">
+                                <h4 class="orders-label">Order ID</h4>
+                                <p class="orders-id">#@order.OrderId</p>
+                                <p class="orders-date">Placed @order.PlacedDate.ToString("MMM dd, yyyy")</p>
+                            </div>
+                            <div class="orders-status-col">
+                                <h4 class="orders-label">Status</h4>
+                                <span class="orders-status-badge orders-status-@order.Status.ToLower()">
+                                    @order.Status
+                                </span>
+                            </div>
+                            <div class="orders-progress-col">
+                                <div class="orders-progress-header">
+                                    <h4 class="orders-label">Journey</h4>
+                                    <p class="orders-progress-text orders-progress-@order.Status.ToLower()">
+                                        @GetProgressText(order)
+                                    </p>
+                                </div>
+                                <div class="orders-progress-bar">
+                                    <div class="orders-progress-fill orders-progress-@order.Status.ToLower()" 
+                                         style="width: @GetProgressPercentage(order)%">
+                                        <div class="orders-progress-glow"></div>
+                                    </div>
+                                </div>
+                                <div class="orders-progress-steps orders-progress-steps-@order.Status.ToLower()">
+                                    <span class="@(order.ProgressStep >= 1 ? "active" : "")">Confirmed</span>
+                                    <span class="@(order.ProgressStep >= 2 ? "active" : "")">Production</span>
+                                    <span class="@(order.ProgressStep >= 3 ? "active" : "")">Shipped</span>
+                                    <span class="@(order.ProgressStep >= 4 ? "active" : "")">Delivered</span>
+                                </div>
+                            </div>
+                            <div class="orders-actions-col">
+                                @if (order.Status == "Shipped")
+                                {
+                                    <button class="orders-reorder-btn" @onclick="@(() => Reorder(order.Id))">
+                                        Reorder
+                                    </button>
+                                }
+                                <button class="orders-toggle-btn" @onclick="@(() => ToggleExpand(order.Id))">
+                                    <span class="material-symbols-outlined">
+                                        @(expandedOrderId == order.Id ? "keyboard_arrow_up" : "keyboard_arrow_down")
+                                    </span>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    @if (expandedOrderId == order.Id)
+                    {
+                        <div class="orders-card-details">
+                            <div class="orders-details-grid">
+                                <div class="orders-tracking-col">
+                                    <h3 class="orders-details-title">
+                                        <span class="material-symbols-outlined">local_shipping</span>
+                                        Tracking History
+                                    </h3>
+                                    <div class="orders-timeline">
+                                        @foreach (var eventItem in order.TrackingEvents)
+                                        {
+                                            <div class="orders-timeline-item @(eventItem.IsActive ? "active" : "")">
+                                                <div class="orders-timeline-dot"></div>
+                                                <div>
+                                                    <p class="orders-timeline-title">@eventItem.Title</p>
+                                                    <p class="orders-timeline-date">@eventItem.Location • @eventItem.Date</p>
+                                                </div>
+                                            </div>
+                                        }
+                                    </div>
+                                </div>
+                                <div class="orders-summary-col">
+                                    <div class="orders-summary-card">
+                                        <h3 class="orders-summary-title">Order Summary</h3>
+                                        <div class="orders-summary-items">
+                                            @foreach (var item in order.Items)
+                                            {
+                                                <div class="orders-summary-item">
+                                                    <div class="orders-summary-item-info">
+                                                        <div class="orders-summary-item-image" 
+                                                             style="background-image: url('@item.ImageUrl')"></div>
+                                                        <div>
+                                                            <p class="orders-summary-item-name">@item.Name</p>
+                                                            <p class="orders-summary-item-details">Size: @item.Size • Qty: @item.Quantity</p>
+                                                        </div>
+                                                    </div>
+                                                    <p class="orders-summary-item-price">$@item.Price.ToString("F2")</p>
+                                                </div>
+                                            }
+                                        </div>
+                                        <div class="orders-summary-divider"></div>
+                                        <div class="orders-summary-totals">
+                                            <div class="orders-summary-total-row">
+                                                <span>Subtotal</span>
+                                                <span>$@order.Subtotal.ToString("F2")</span>
+                                            </div>
+                                            <div class="orders-summary-total-row">
+                                                <span>Shipping</span>
+                                                <span class="orders-free">Free</span>
+                                            </div>
+                                            <div class="orders-summary-total-row orders-total">
+                                                <span>Total</span>
+                                                <span>$@order.Total.ToString("F2")</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    }
+                </div>
+            }
+        </div>
+
+        <div class="orders-recommendations">
+            <h2 class="orders-recommendations-title">Complementary IQ Picks</h2>
+            <div class="orders-recommendations-grid">
+                @foreach (var recommendation in recommendations)
+                {
+                    <div class="orders-recommendation-card">
+                        <div class="orders-recommendation-image" 
+                             style="background-image: url('@recommendation.ImageUrl')"></div>
+                        <h3 class="orders-recommendation-name">@recommendation.Name</h3>
+                        <p class="orders-recommendation-desc">@recommendation.Description</p>
+                        <div class="orders-recommendation-footer">
+                            <span class="orders-recommendation-price">$@recommendation.Price</span>
+                            <button class="orders-recommendation-add">
+                                <span class="material-symbols-outlined">add</span>
+                            </button>
+                        </div>
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+</main>
+
+@code {
+    private List<Order> allOrders = new();
+    private List<Order> filteredOrders = new();
+    private string activeFilter = "all";
+    private string? expandedOrderId;
+    private int activeOrdersCount;
+    private List<Recommendation> recommendations = new();
+
+    public class Order
+    {
+        public string Id { get; set; } = Guid.NewGuid().ToString();
+        public string OrderId { get; set; } = string.Empty;
+        public string ImageUrl { get; set; } = string.Empty;
+        public DateTime PlacedDate { get; set; }
+        public string Status { get; set; } = string.Empty;
+        public int ProgressStep { get; set; }
+        public List<TrackingEvent> TrackingEvents { get; set; } = new();
+        public List<OrderItem> Items { get; set; } = new();
+        public decimal Subtotal { get; set; }
+        public decimal Total { get; set; }
+    }
+
+    public class TrackingEvent
+    {
+        public string Title { get; set; } = string.Empty;
+        public string Location { get; set; } = string.Empty;
+        public string Date { get; set; } = string.Empty;
+        public bool IsActive { get; set; }
+    }
+
+    public class OrderItem
+    {
+        public string Name { get; set; } = string.Empty;
+        public string ImageUrl { get; set; } = string.Empty;
+        public string Size { get; set; } = string.Empty;
+        public int Quantity { get; set; }
+        public decimal Price { get; set; }
+    }
+
+    public class Recommendation
+    {
+        public string Name { get; set; } = string.Empty;
+        public string Description { get; set; } = string.Empty;
+        public string ImageUrl { get; set; } = string.Empty;
+        public decimal Price { get; set; }
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            await Task.Delay(300);
+
+            await Auth.InitializeAsync();
+
+            if (!Auth.IsAuthenticated)
+            {
+                Nav.NavigateTo("/login");
+                return;
+            }
+
+            LoadOrders();
+            LoadRecommendations();
+            FilterOrders();
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error in Orders.OnInitialized: {ex.Message}");
+            allOrders = new List<Order>();
+            recommendations = new List<Recommendation>();
+        }
+    }
+
+    private void LoadOrders()
+    {
+        try
+        {
+            if (DataService == null)
+            {
+                allOrders = new List<Order>();
+                return;
+            }
+
+            var designs = (DataService.GetAllDesigns() ?? new List<Design>()).Take(3).ToList();
+        var random = new Random();
+
+        allOrders = new List<Order>
+        {
+            new Order
+            {
+                OrderId = "CQ-99021",
+                ImageUrl = designs.Count > 0 ? designs[0].FinalImageUrl : "https://via.placeholder.com/64",
+                PlacedDate = DateTime.UtcNow.AddDays(-7),
+                Status = "In Production",
+                ProgressStep = 2,
+                TrackingEvents = new List<TrackingEvent>
+                {
+                    new TrackingEvent { Title = "Order Confirmed", Location = "Oct 20, 2023, 09:00 AM", Date = "Oct 20, 2023, 09:00 AM", IsActive = false }
+                },
+                Items = new List<OrderItem>
+                {
+                    new OrderItem { Name = designs.Count > 0 ? designs[0].Prompt : "Design Item", ImageUrl = designs.Count > 0 ? designs[0].FinalImageUrl : "", Size = "XL", Quantity = 1, Price = 45.00m }
+                },
+                Subtotal = 45.00m,
+                Total = 45.00m
+            },
+            new Order
+            {
+                OrderId = "CQ-98114",
+                ImageUrl = designs.Count > 1 ? designs[1].FinalImageUrl : "https://via.placeholder.com/64",
+                PlacedDate = DateTime.UtcNow.AddDays(-11),
+                Status = "Shipped",
+                ProgressStep = 3,
+                TrackingEvents = new List<TrackingEvent>
+                {
+                    new TrackingEvent { Title = "In Transit - Arrived at Hub", Location = "New York, NY", Date = "Oct 26, 2023, 02:45 PM", IsActive = true },
+                    new TrackingEvent { Title = "Package Departed Carrier Facility", Location = "Jersey City, NJ", Date = "Oct 25, 2023, 11:10 AM", IsActive = true },
+                    new TrackingEvent { Title = "Order Confirmed", Location = "", Date = "Oct 20, 2023, 09:00 AM", IsActive = false }
+                },
+                Items = new List<OrderItem>
+                {
+                    new OrderItem { Name = designs.Count > 1 ? designs[1].Prompt : "Design Item", ImageUrl = designs.Count > 1 ? designs[1].FinalImageUrl : "", Size = "L", Quantity = 2, Price = 78.00m }
+                },
+                Subtotal = 78.00m,
+                Total = 78.00m
+            },
+            new Order
+            {
+                OrderId = "CQ-97552",
+                ImageUrl = designs.Count > 2 ? designs[2].FinalImageUrl : "https://via.placeholder.com/64",
+                PlacedDate = DateTime.UtcNow.AddDays(-16),
+                Status = "Delivered",
+                ProgressStep = 4,
+                TrackingEvents = new List<TrackingEvent>
+                {
+                    new TrackingEvent { Title = "Delivered", Location = "Your Address", Date = "Oct 18, 2023, 03:30 PM", IsActive = true },
+                    new TrackingEvent { Title = "Out for Delivery", Location = "", Date = "Oct 18, 2023, 08:00 AM", IsActive = false },
+                    new TrackingEvent { Title = "Order Confirmed", Location = "", Date = "Oct 15, 2023, 09:00 AM", IsActive = false }
+                },
+                Items = new List<OrderItem>
+                {
+                    new OrderItem { Name = designs.Count > 2 ? designs[2].Prompt : "Design Item", ImageUrl = designs.Count > 2 ? designs[2].FinalImageUrl : "", Size = "M", Quantity = 1, Price = 45.00m }
+                },
+                Subtotal = 45.00m,
+                Total = 45.00m
+            }
+        };
+
+        activeOrdersCount = allOrders.Count(o => o.Status == "In Production" || o.Status == "Shipped");
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error in Orders.LoadOrders: {ex.Message}");
+            allOrders = new List<Order>();
+            activeOrdersCount = 0;
+        }
+    }
+
+    private void LoadRecommendations()
+    {
+        recommendations = new List<Recommendation>
+        {
+            new Recommendation { Name = "Tech-Knit Blazer", Description = "Adaptive fit system", ImageUrl = "https://lh3.googleusercontent.com/aida-public/AB6AXuDeDvpxWcII3TISA-1tGXtmKgXoNG-eOi4rLkIOymH2apEP3I8q4VcEQlnHs6FdEzWnVV1-WLPTv06VtEJ4Ze6WPgcTSii3iLmWzy0BPSVYycLis5vsVWkUiMvEnpmGIrdueCUWUsi1I10X9ODsnXC1qXHdYVe3r4OcwOyvbb-T2QlvQ_GmwDseZYHgn9H7x8mLEqRXvdvEMQTxJgxcpJWesJNHwGjAGYa9yE8SByzh06mrNvdCLXKEZVaa5x15CTBs8wRjTRYT9Ar_", Price = 295.00m },
+            new Recommendation { Name = "IQ Leather Biker", Description = "Sustainable bio-leather", ImageUrl = "https://lh3.googleusercontent.com/aida-public/AB6AXuBgdCjuygjrNyIUMVnQD18GyKIv13P75tdihvdyl8J75yQGA5-Mc6qLbqm5I7D-EenOzZKMD4IXixwRAH0A6H2YZxr7Imm3XOg_agX4HI7O8Dt3g_lJfosVslVin22qhExLS8e2VMo5yqg4OY0wLYT-13ZCSvhPaRzQjXVL7B3a4TbKFsoLOUxEByOPCdq9kBwWNxRZFy-52zYQjZmvNlInNDAkzrhka6qCzekUk4ycGJNZPzbV8rlByZAupWABpvswwFZEgw57XWxp", Price = 450.00m },
+            new Recommendation { Name = "Pulse Sneakers", Description = "Responsive sole tech", ImageUrl = "https://lh3.googleusercontent.com/aida-public/AB6AXuBXcMmGRRy0VTE47yuR1RtufcCg40t3YIaZkCYuk0RbSoIh8y_J1FVF3YlHOneRXZ0S_PHhv4lCDGBRJFj_GYvxa_t36_1OStanGhjbwRy1vYWpljPmybDSPBhwpybIp9lmJaAegf8peMfQj9HOR12eZ44r4buWP25QkB9qYWkRtsBtLTRomHjV9XVZrhQIbb7YoOhCx4V1ydgF613HMGTagR7k7B9XNnB3a6MbK7KkaYhS8aLU9B8kpOjAAA1vfXE5vwCUbFzlK_ry", Price = 160.00m },
+            new Recommendation { Name = "Core Black Tee", Description = "Premium 320gsm cotton", ImageUrl = "https://lh3.googleusercontent.com/aida-public/AB6AXuD1Hu8Djm0KOduDVEpkxn3lod6u2sffI8mysRPDXBYth2N2fhKA4sOOV-JsPaFah594fQ6ZqMO9k7uDCMo8gNHyTHZ-Hl7S-78NbS6nWPDtuBEKGLzAxXfYcRz_O6w4vfnmaA-3EVYOM2hEmJJHUR53zFW5etR8K4Hu0R0cHhdsvYJtE6L86phie-WYbLjxz0a70i4FKpMYggDHEhFgR91eO2N11Rls7F7-x3NUIRNTXeKynAWSAPBFsvLsdpmWhonLEZJ08wyiA5iI", Price = 45.00m }
+        };
+    }
+
+    private void FilterOrders()
+    {
+        filteredOrders = activeFilter switch
+        {
+            "all" => allOrders,
+            "production" => allOrders.Where(o => o.Status == "In Production").ToList(),
+            "shipped" => allOrders.Where(o => o.Status == "Shipped").ToList(),
+            "delivered" => allOrders.Where(o => o.Status == "Delivered").ToList(),
+            "cancelled" => allOrders.Where(o => o.Status == "Cancelled").ToList(),
+            _ => allOrders
+        };
+    }
+
+    private void SetAllFilter() { activeFilter = "all"; FilterOrders(); StateHasChanged(); }
+    private void SetProductionFilter() { activeFilter = "production"; FilterOrders(); StateHasChanged(); }
+    private void SetShippedFilter() { activeFilter = "shipped"; FilterOrders(); StateHasChanged(); }
+    private void SetDeliveredFilter() { activeFilter = "delivered"; FilterOrders(); StateHasChanged(); }
+    private void SetCancelledFilter() { activeFilter = "cancelled"; FilterOrders(); StateHasChanged(); }
+
+    private void ToggleExpand(string orderId)
+    {
+        expandedOrderId = expandedOrderId == orderId ? null : orderId;
+        StateHasChanged();
+    }
+
+    private string GetProgressText(Order order)
+    {
+        return order.Status switch
+        {
+            "In Production" => $"{GetProgressPercentage(order)}% Complete",
+            "Shipped" => $"{GetProgressPercentage(order)}% Complete",
+            "Delivered" => "Delivered",
+            _ => $"{GetProgressPercentage(order)}% Complete"
+        };
+    }
+
+    private int GetProgressPercentage(Order order)
+    {
+        return order.ProgressStep switch
+        {
+            1 => 25,
+            2 => 50,
+            3 => 75,
+            4 => 100,
+            _ => 0
+        };
+    }
+
+    private void NavigateToSupport()
+    {
+        // Navigate to support page
+    }
+
+    private void NavigateToCreate()
+    {
+        Nav.NavigateTo("/create");
+    }
+
+    private void Reorder(string orderId)
+    {
+        Nav.NavigateTo("/create");
+    }
+}

@@ -1,0 +1,48 @@
+@inherits LayoutComponentBase
+@inject AuthStateService Auth
+@inject ILogger<MainLayout> Logger
+@inject NavigationManager Nav
+@implements IDisposable
+
+<UserNavbar />
+<main class="container-fluid py-2">
+    @Body
+</main>
+
+
+@code {
+
+    override protected async Task OnInitializedAsync()
+    {
+        try
+        {
+            await Auth.InitializeAsync();
+            Auth.OnUserChanged += StateHasChanged;
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "Error in MainLayout.OnInitializedAsync: {Message}", ex.Message);
+        }
+    }
+
+    public void Dispose()
+    {
+        try
+        {
+            if (Auth != null)
+            {
+                Auth.OnUserChanged -= StateHasChanged;
+            }
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "Error in MainLayout.Dispose: {Message}", ex.Message);
+        }
+    }
+
+    private void ReloadPage()
+    {
+        Nav.NavigateTo(Nav.Uri, forceLoad: true);
+    }
+
+}

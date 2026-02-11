@@ -1,0 +1,98 @@
+.share-social-main {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75em;
+}
+
+.share-social-up,
+.share-social-down {
+    display: flex;
+    flex-direction: row;
+    gap: 0.75em;
+}
+
+.share-social-card {
+    width: 90px;
+    height: 90px;
+    background: transparent; /* No background as requested */
+    border-radius: 5px;
+    border: 3px solid #2d2d2d;
+    box-shadow: 6px 6px 0px #2d2d2d;
+    transition: all 0.2s cubic-bezier(0.68, -0.55, 0.27, 1.55);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+}
+
+.share-social-card1 {
+    border-radius: 90px 5px 5px 5px;
+    padding-top: 12px;
+    padding-left: 12px;
+}
+
+.share-social-card2 {
+    border-radius: 5px 90px 5px 5px;
+    padding-top: 12px;
+    padding-right: 12px;
+}
+
+.share-social-card3 {
+    border-radius: 5px 5px 5px 90px;
+    padding-bottom: 10px;
+    padding-left: 12px;
+}
+
+.share-social-card4 {
+    border-radius: 5px 5px 90px 5px;
+    padding-bottom: 12px;
+    padding-right: 12px;
+}
+
+.share-social-instagram,
+.share-social-twitter,
+.share-social-facebook,
+.share-social-whatsapp {
+    transition: fill 0.2s ease-in-out;
+}
+
+.share-social-instagram {
+    fill: #e1306c;
+}
+
+.share-social-twitter {
+    fill: #1da1f2;
+}
+
+.share-social-facebook {
+    fill: #1877f2;
+}
+
+.share-social-whatsapp {
+    fill: #00a849;
+}
+
+.share-social-card:hover {
+    transform: translate(-6px, -6px);
+    box-shadow: 12px 12px 0px #2d2d2d;
+}
+
+.share-social-card1:hover {
+    background-color: #fd1d1d;
+}
+
+.share-social-card2:hover {
+    background-color: #24a0ed;
+}
+
+.share-social-card3:hover {
+    background-color: #1877f2;
+}
+
+.share-social-card4:hover {
+    background-color: #4cd137;
+}
+
+.share-social-card:hover svg {
+    fill: white;
+}

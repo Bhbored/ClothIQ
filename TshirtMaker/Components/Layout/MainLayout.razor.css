@@ -1,0 +1,6 @@
+﻿.navbar-brand {
+    font-size: 1.5rem;
+    background: linear-gradient(135deg, var(--custom-primary-core), var(--custom-accent-core));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+}

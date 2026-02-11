@@ -1,0 +1,36 @@
+@inject ILogger<Toast> Logger
+@if (IsVisible)
+{
+    <div class="toast-container show">
+        <div class="toast-content">
+            <div class="toast-message">
+                <div class="toast-icon">
+                    <span class="material-symbols-outlined">info</span>
+                </div>
+                <div class="toast-text">
+                    <p class="toast-title">Mock Generation Active</p>
+                    <p class="toast-description">This website uses mock image generation. To enable real AI generation, add your OpenAI API key and uncomment the code section in the Create page.</p>
+                </div>
+            </div>
+            <div class="toast-close"
+                 @onclick="CloseToast"
+                 role="button"
+                 tabindex="0"
+                 aria-label="Close toast">
+                <span class="material-symbols-outlined">close</span>
+            </div>
+        </div>
+    </div>
+}
+
+
+@code {
+    [Parameter] public bool IsVisible { get; set; }
+    [Parameter] public EventCallback OnClose { get; set; }
+
+    private async Task CloseToast()
+    {
+        Logger.LogInformation("Toast close button clicked!");
+        await OnClose.InvokeAsync();
+    }
+}

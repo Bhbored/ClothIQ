@@ -1,0 +1,81 @@
+@using TshirtMaker.Models.Core
+
+<div class="edit-design-overlay @(IsOpen ? "edit-design-open" : "")" @onclick="ClosePopup">
+    <div class="edit-design-container" @onclick:stopPropagation="true">
+        <div class="edit-design-header">
+            <h3 class="edit-design-title">Edit Design Title</h3>
+            <button class="edit-design-close" @onclick="ClosePopup" title="Close">
+                <span class="material-symbols-outlined">close</span>
+            </button>
+        </div>
+
+        <div class="edit-design-body">
+            <div class="edit-design-field">
+                <label class="edit-design-label">Title <span class="required">*</span></label>
+                <input type="text" class="edit-design-input @(titleError ? "error" : "")"
+                    placeholder="Enter design title..." @bind="designTitle" @bind:event="oninput" />
+                @if (titleError)
+                {
+                    <span class="edit-design-error">Title is required</span>
+                }
+            </div>
+        </div>
+
+        <div class="edit-design-footer">
+            <button class="edit-design-cancel-btn" @onclick="ClosePopup">Cancel</button>
+            <button class="edit-design-submit-btn" @onclick="HandleSave" disabled="@(!IsValid)">
+                Save
+            </button>
+        </div>
+    </div>
+</div>
+
+@code {
+    [Parameter] public bool IsOpen { get; set; }
+    [Parameter] public Design? Design { get; set; }
+    [Parameter] public EventCallback OnClose { get; set; }
+    [Parameter] public EventCallback<Design> OnSave { get; set; }
+
+    private string designTitle = string.Empty;
+    private bool titleError = false;
+
+    private bool IsValid => !string.IsNullOrWhiteSpace(designTitle);
+
+    protected override void OnParametersSet()
+    {
+        if (Design != null)
+        {
+            designTitle = Design.Title;
+        }
+    }
+
+    private async Task ClosePopup()
+    {
+        ResetForm();
+        await OnClose.InvokeAsync();
+    }
+
+    private void ValidateTitle()
+    {
+        titleError = string.IsNullOrWhiteSpace(designTitle);
+    }
+
+    private async Task HandleSave()
+    {
+        ValidateTitle();
+
+        if (!IsValid || Design == null)
+            return;
+
+        Design.Title = designTitle;
+        await OnSave.InvokeAsync(Design);
+        ResetForm();
+        await ClosePopup();
+    }
+
+    private void ResetForm()
+    {
+        designTitle = string.Empty;
+        titleError = false;
+    }
+}

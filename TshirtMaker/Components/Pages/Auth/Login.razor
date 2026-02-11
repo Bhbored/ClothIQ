@@ -1,0 +1,177 @@
+@page "/login"
+@layout EmptyLayout
+@using TshirtMaker.Services
+@using TshirtMaker.Services.Supabase
+@using TshirtMaker.Models
+@inject NavigationManager Navigation
+@inject SupabaseAuthService SupabaseAuth
+@inject AuthStateService Auth
+
+<div class="login-container">
+    <!-- Left Side: Visual Showcase -->
+    <div class="login-visual-side">
+        <div class="visual-background">
+            <div class="iq-pattern"></div>
+            <div class="gradient-blur gradient-blur-1"></div>
+            <div class="gradient-blur gradient-blur-2"></div>
+        </div>
+
+        <div class="brand-logo">
+            <div class="logo-icon">
+                <span style="font-size: 1.25rem;">✨</span>
+            </div>
+            <h2 class="brand-name">ClothIQ</h2>
+        </div>
+
+        <div class="visual-content">
+            <div class="hero-image-container">
+                <div class="hero-image">
+                    <div class="hero-image-inner"
+                        style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuAeYT9laJe73dIHWvw8J8bpKqkHTURjWXZC9zInvVz8vHF6CNwX5lM9ZgFYsD3DgTO0V5OVjJOUBbCIgGblz7PGW5cUFVdujcQFn-d0jHCCTTTiLVGWOK35Bsbi_cru-TmeCShMOFglKqGsPVDJeQDKSN4nqfSph-8cOyuXfMu4QfllltFiS0CmZYTZn27oAxIuNJLeEfpdpDNDIuGKfF3Ho7i8BiBE742hUDLd3aSB8eir44qPbwcfJUUXx_T7HEZZ1hQBhxcIFdyb");'>
+                    </div>
+                    <div class="hero-overlay"></div>
+                </div>
+            </div>
+        </div>
+
+        <div class="visual-footer">
+            <p class="visual-tagline">Generative Fashion</p>
+            <h3 class="visual-title">Elevate your style with <span class="primary-text">AI precision.</span></h3>
+        </div>
+    </div>
+
+    <!-- Right Side: Login Form -->
+    <div class="login-form-side">
+        <div class="form-background">
+            <div class="iq-pattern"></div>
+        </div>
+
+        <div class="form-content">
+            <!-- Mobile Logo -->
+            <div class="mobile-logo">
+                <div class="logo-icon">
+                    <span class="material-symbols-outlined">auto_awesome</span>
+                </div>
+                <h2 class="brand-name">ClothIQ</h2>
+            </div>
+
+            <div class="form-header">
+                <h1 class="form-title">Welcome Back</h1>
+                <p class="form-subtitle">Design the future of your wardrobe.</p>
+            </div>
+
+            <!-- Glassmorphism Card -->
+            <div class="glass-card">
+                @if (!string.IsNullOrEmpty(error))
+                {
+                    <div class="alert alert-danger">@error</div>
+                }
+
+                <EditForm Model="LoginModel" OnValidSubmit="HandleLogin" OnInvalidSubmit="HandleInvalidSubmit">
+                    <DataAnnotationsValidator />
+
+                    <!-- Email Field -->
+                    <div class="form-field">
+                        <label class="form-label">Email Address</label>
+                        <div class="input-wrapper">
+                            <span class="input-icon material-symbols-outlined">mail</span>
+                            <InputText @bind-Value="LoginModel.Email" class="login-input" placeholder="name@example.com" autocomplete="current-email"
+                                style="width: 100%; background-color: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 9999px; height: 3.5rem; padding-left: 3rem; padding-right: 1.5rem; color: white; font-size: 1rem; transition: all 0.3s ease; outline: none; box-sizing: border-box;" />
+                        </div>
+                        @if (showValidationMessages)
+                        {
+                            <ValidationMessage For="@(() => LoginModel.Email)" />
+                        }
+                    </div>
+
+                    <!-- Password Field -->
+                    <div class="form-field">
+                        <div class="form-label-row">
+                            <label class="form-label">Password</label>
+                            <a class="forgot-link" href="#">Forgot Password?</a>
+                        </div>
+                        <div class="input-wrapper">
+                            <span class="input-icon material-symbols-outlined">lock</span>
+                            <InputText type="password" @bind-Value="LoginModel.Password" class="login-input"
+                                placeholder="••••••••" autocomplete="current-password"
+                                style="width: 100%; background-color: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 9999px; height: 3.5rem; padding-left: 3rem; padding-right: 1.5rem; color: white; font-size: 1rem; transition: all 0.3s ease; outline: none; box-sizing: border-box;" />
+                        </div>
+                        @if (showValidationMessages)
+                        {
+                            <ValidationMessage For="@(() => LoginModel.Password)" />
+                        }
+                    </div>
+
+                    <!-- Sign In Button -->
+                    <button type="submit" class="submit-button" disabled="@isLoggingIn">
+                        @if (isLoggingIn)
+                        {
+                            <LoadingSpinner />
+                        }
+                        else
+                        {
+                            <span>Sign In</span>
+                            <span class="material-symbols-outlined">arrow_forward</span>
+                        }
+                    </button>
+                </EditForm>
+            </div>
+
+            <!-- Footer CTA -->
+            <div class="form-footer">
+                <p class="footer-text">
+                    Don't have an account?
+                    <a class="footer-link" href="/signup">Sign Up</a>
+                </p>
+            </div>
+        </div>
+    </div>
+</div>
+
+@code {
+    public LoginModel LoginModel { get; set; } = new LoginModel();
+    string error = "";
+    bool showValidationMessages = false;
+    bool isLoggingIn = false;
+
+    void HandleInvalidSubmit()
+    {
+        showValidationMessages = true;
+    }
+
+    async Task HandleLogin()
+    {
+        error = "";
+        showValidationMessages = true;
+        isLoggingIn = true;
+
+        if (string.IsNullOrWhiteSpace(LoginModel.Email) || string.IsNullOrWhiteSpace(LoginModel.Password))
+        {
+            error = "Please fill in both email and password fields.";
+            isLoggingIn = false;
+            return;
+        }
+
+        try
+        {
+            var userDto = await SupabaseAuth.SignInAsync(LoginModel.Email, LoginModel.Password);
+
+            if (userDto is not null)
+            {
+                var user = userDto.ToModel();
+                Auth.SetUser(user);
+                Navigation.NavigateTo("/dashboard",forceLoad:false);
+            }
+            else
+            {
+                error = "Invalid email or password.";
+                isLoggingIn = false;
+            }
+        }
+        catch (Exception ex)
+        {
+            error = $"Login failed: {ex.Message}";
+            isLoggingIn = false;
+        }
+    }
+}

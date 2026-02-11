@@ -1,0 +1,41 @@
+<div class="confirm-delete-overlay @(IsOpen ? "confirm-delete-open" : "")" @onclick="ClosePopup">
+    <div class="confirm-delete-container" @onclick:stopPropagation="true">
+        <div class="confirm-delete-header">
+            <h3 class="confirm-delete-title">Confirm Delete</h3>
+            <button class="confirm-delete-close" @onclick="ClosePopup" title="Close">
+                <span class="material-symbols-outlined">close</span>
+            </button>
+        </div>
+
+        <div class="confirm-delete-body">
+            <div class="confirm-delete-icon">
+                <span class="material-symbols-outlined">warning</span>
+            </div>
+            <p class="confirm-delete-message">@Message</p>
+        </div>
+
+        <div class="confirm-delete-footer">
+            <button class="confirm-delete-cancel-btn" @onclick="ClosePopup">Cancel</button>
+            <button class="confirm-delete-confirm-btn" @onclick="HandleConfirm">Delete</button>
+        </div>
+    </div>
+</div>
+
+@code {
+    [Parameter] public string Message { get; set; } = string.Empty;
+    [Parameter] public bool IsOpen { get; set; }
+    [Parameter] public EventCallback OnClose { get; set; }
+    [Parameter] public EventCallback<Guid> OnConfirm { get; set; }
+    [Parameter] public Guid ItemId { get; set; }
+
+    private async Task ClosePopup()
+    {
+        await OnClose.InvokeAsync();
+    }
+
+    private async Task HandleConfirm()
+    {
+        await OnConfirm.InvokeAsync(ItemId);
+        await ClosePopup();
+    }
+}

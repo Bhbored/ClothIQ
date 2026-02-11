@@ -1,0 +1,210 @@
+@using TshirtMaker.Services
+@using TshirtMaker.Services.Supabase
+@inject NavigationManager Nav
+@inject AuthStateService Auth
+@inject SupabaseAuthService SupabaseAuth
+@inject IUserRepository UserRepository
+@implements IDisposable
+
+<header class="sticky top-0 z-50 px-6 py-4 lg:px-20">
+    <nav class="mx-auto flex max-w-7xl items-center justify-between glass-panel rounded-full px-8 py-3">
+        <div class="flex items-center gap-3">
+            <div class="flex size-8 items-center justify-center rounded-lg bg-primary text-white cursor-pointer"
+                 @onclick="NavigateToDashboard">
+                <svg fill="none" viewbox="0 0 48 48" xmlns="http://www.w3.org/2000/svg"
+                     style="width: 1.25rem; height: 1.25rem;">
+                    <path d="M24 45.8096C19.6865 45.8096 15.4698 44.5305 11.8832 42.134C8.29667 39.7376 5.50128 36.3314 3.85056 32.3462C2.19985 28.361 1.76794 23.9758 2.60947 19.7452C3.451 15.5145 5.52816 11.6284 8.57829 8.5783C11.6284 5.52817 15.5145 3.45101 19.7452 2.60948C23.9758 1.76795 28.361 2.19986 32.3462 3.85057C36.3314 5.50129 39.7376 8.29668 42.134 11.8833C44.5305 15.4698 45.8096 19.6865 45.8096 24L24 24L24 45.8096Z"
+                          fill="currentColor"></path>
+                </svg>
+            </div>
+            <h2 class="text-xl font-bold tracking-tight">
+                <a href="/dashboard" style="text-decoration: none; color: inherit; cursor: pointer;"
+                   @onclick:preventDefault @onclick="NavigateToDashboard">ClothIQ</a>
+            </h2>
+        </div>
+        <div class="navbar-links items-center gap-10">
+            <a href="/dashboard"
+               class="text-sm font-medium text-white-opacity-low hover:text-white transition-colors cursor-pointer @GetNavLinkClass("/dashboard")"
+               @onclick:preventDefault @onclick="() => NavigateToDashboard()">Dashboard</a>
+            <a href="/feed"
+               class="text-sm font-medium text-white-opacity-low hover:text-white transition-colors cursor-pointer @GetNavLinkClass("/feed")"
+               @onclick:preventDefault @onclick="() => NavigateToFeed()">Feed</a>
+            <a href="/collections"
+               class="text-sm font-medium text-white-opacity-low hover:text-white transition-colors cursor-pointer @GetNavLinkClass("/collections")"
+               @onclick:preventDefault @onclick="() => NavigateToCollections()">Collection</a>
+            <a href="/create"
+               class="text-sm font-medium text-white-opacity-low hover:text-white transition-colors cursor-pointer @GetNavLinkClass("/create")"
+               @onclick:preventDefault @onclick="() => NavigateToCreate()">Studio</a>
+            <a href="/orders"
+               class="text-sm font-medium text-white-opacity-low hover:text-white transition-colors cursor-pointer @GetNavLinkClass("/orders")"
+               @onclick:preventDefault @onclick="() => NavigateToOrders()">Orders</a>
+        </div>
+        <div class="flex items-center gap-4">
+            <button class="btn-icon text-white-opacity-low hover:text-white transition-colors" type="button">
+                <span class="material-symbols-outlined">notifications</span>
+            </button>
+            <button class="btn-icon text-white-opacity-low hover:text-white transition-colors" type="button">
+                <span class="material-symbols-outlined">settings</span>
+            </button>
+            <div class="flex items-center gap-4 relative">
+                @if (Auth.CurrentUser != null)
+                {
+                    <div class="relative inline-block">
+                        <div class="user-avatar cursor-pointer"
+                             style="background-image: url('@currentUser.AvatarUrl');"
+                             @onclick:stopPropagation="true" @onclick="ToggleAvatarDropdown">
+                        </div>
+                        @if (showAvatarDropdown)
+                        {
+                            <div class="avatar-dropdown" @onclick:stopPropagation>
+                                @foreach (var avatar in TshirtMaker.PublicData.PublicPresets.Avatars)
+                                {
+                                    <div class="avatar-option"
+                                         @onclick:stopPropagation="true" @onclick="() => ChangeAvatar(avatar)">
+                                        <div class="avatar-preview"
+                                             style="background-image: url('@avatar');">
+                                        </div>
+                                        <span>Select Avatar</span>
+                                    </div>
+                                }
+                            </div>
+                        }
+                    </div>
+                    <button class="btn-icon text-white-opacity-low hover:text-white transition-colors" type="button" @onclick="HandleLogout" title="Logout">
+                        <span class="material-symbols-outlined">logout</span>
+                    </button>
+                }
+                else
+                {
+                    <div class="relative inline-block">
+                        <div class="user-avatar cursor-pointer"
+                             style="background-image: url(@currentUser.AvatarUrl);"
+                             @onclick:stopPropagation="true" @onclick="ToggleAvatarDropdown">
+                        </div>
+                        @if (showAvatarDropdown)
+                        {
+                            <div class="avatar-dropdown" @onclick:stopPropagation>
+                                @foreach (var avatar in TshirtMaker.PublicData.PublicPresets.Avatars)
+                                {
+                                    <div class="avatar-option"
+                                         @onclick:stopPropagation="true" @onclick="() => ChangeAvatar(avatar)">
+                                        <div class="avatar-preview"
+                                             style="background-image: url('@avatar');">
+                                        </div>
+                                        <span>Select Avatar</span>
+                                    </div>
+                                }
+                            </div>
+                        }
+                    </div>
+                }
+            </div>
+        </div>
+        @if (showAvatarDropdown)
+        {
+            <div class="fixed inset-0 z-40" @onclick="() => { showAvatarDropdown = false; StateHasChanged(); }"></div>
+        }
+    </nav>
+</header>
+
+@code {
+
+    private bool showAvatarDropdown = false;
+
+    private User currentUser = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+
+        await Task.Delay(300);
+        await Auth.InitializeAsync();
+        if (Auth.CurrentUser != null)
+        {
+            var id = Auth.CurrentUser.Id;
+            var userdto = await UserRepository.GetByIdAsync(id);
+            currentUser = userdto!.ToModel();
+        }
+        Auth.OnUserChanged += StateHasChanged;
+
+        StateHasChanged();
+        await base.OnInitializedAsync();
+    }
+
+
+    public void Dispose()
+    {
+        Auth.OnUserChanged -= StateHasChanged;
+    }
+
+    private async Task HandleLogout()
+    {
+        await SupabaseAuth.SignOutAsync();
+        Auth.ClearUser();
+        Nav.NavigateTo("/landing");
+    }
+
+    private void ToggleAvatarDropdown()
+    {
+        showAvatarDropdown = !showAvatarDropdown;
+        StateHasChanged();
+    }
+
+    private async Task ChangeAvatar(string avatarUrl)
+    {
+
+        currentUser.AvatarUrl = avatarUrl;
+        showAvatarDropdown = false;
+        StateHasChanged();
+        if (Auth.CurrentUser != null)
+        {
+            var ID = Auth.CurrentUser.Id;
+
+            _ = Task.Run(async () =>
+            {
+                var userdto = await UserRepository.GetByIdAsync(ID);
+                userdto!.AvatarUrl = avatarUrl;
+                await UserRepository.UpdateAsync(userdto!);
+            });
+
+        }
+    }
+
+    private string GetNavLinkClass(string path)
+    {
+        var uri = new Uri(Nav.Uri);
+        var currentPath = uri.AbsolutePath;
+
+        if (currentPath.Equals(path, StringComparison.OrdinalIgnoreCase) ||
+        currentPath.StartsWith(path + "/", StringComparison.OrdinalIgnoreCase))
+        {
+            return "text-white";
+        }
+
+        return "";
+    }
+
+    private void NavigateToDashboard()
+    {
+        Nav.NavigateTo("/dashboard");
+    }
+
+    private void NavigateToFeed()
+    {
+        Nav.NavigateTo("/feed");
+    }
+
+    private void NavigateToCollections()
+    {
+        Nav.NavigateTo("/collections");
+    }
+
+    private void NavigateToCreate()
+    {
+        Nav.NavigateTo("/create");
+    }
+
+    private void NavigateToOrders()
+    {
+        Nav.NavigateTo("/orders");
+    }
+}

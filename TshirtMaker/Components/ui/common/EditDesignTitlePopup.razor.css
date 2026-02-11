@@ -1,0 +1,157 @@
+.edit-design-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.5);
+    backdrop-filter: blur(4px);
+    z-index: 1000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.3s ease, visibility 0.3s ease;
+}
+
+.edit-design-overlay.edit-design-open {
+    opacity: 1;
+    visibility: visible;
+}
+
+.edit-design-container {
+    background: var(--custom-card-core);
+    border-radius: 1rem;
+    width: 90%;
+    max-width: 500px;
+    display: flex;
+    flex-direction: column;
+    transform: scale(0.9);
+    transition: transform 0.3s ease;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+}
+
+.edit-design-overlay.edit-design-open .edit-design-container {
+    transform: scale(1);
+}
+
+.edit-design-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 1.5rem;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.edit-design-title {
+    font-size: 1.25rem;
+    font-weight: 700;
+    margin: 0;
+    color: var(--custom-text-primary);
+}
+
+.edit-design-close {
+    background: none;
+    border: none;
+    color: var(--custom-text-secondary);
+    cursor: pointer;
+    padding: 0.5rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 0.5rem;
+    transition: background 0.2s ease;
+}
+
+.edit-design-close:hover {
+    background: rgba(255, 255, 255, 0.1);
+}
+
+.edit-design-body {
+    padding: 1.5rem;
+}
+
+.edit-design-field {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.edit-design-label {
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: var(--custom-text-primary);
+}
+
+.required {
+    color: var(--custom-accent);
+}
+
+.edit-design-input {
+    padding: 0.75rem;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 0.5rem;
+    background: rgba(255, 255, 255, 0.05);
+    color: var(--custom-text-primary);
+    font-size: 1rem;
+    transition: border-color 0.2s ease, background 0.2s ease;
+}
+
+.edit-design-input:focus {
+    outline: none;
+    border-color: var(--custom-accent);
+    background: rgba(255, 255, 255, 0.08);
+}
+
+.edit-design-input.error {
+    border-color: #ef4444;
+}
+
+.edit-design-error {
+    font-size: 0.75rem;
+    color: #ef4444;
+}
+
+.edit-design-footer {
+    display: flex;
+    gap: 1rem;
+    padding: 1.5rem;
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+    justify-content: flex-end;
+}
+
+.edit-design-cancel-btn,
+.edit-design-submit-btn {
+    padding: 0.75rem 1.5rem;
+    border: none;
+    border-radius: 0.5rem;
+    font-size: 0.875rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.edit-design-cancel-btn {
+    background: rgba(255, 255, 255, 0.1);
+    color: var(--custom-text-secondary);
+}
+
+.edit-design-cancel-btn:hover {
+    background: rgba(255, 255, 255, 0.15);
+}
+
+.edit-design-submit-btn {
+    background: var(--custom-accent);
+    color: white;
+}
+
+.edit-design-submit-btn:hover:not(:disabled) {
+    opacity: 0.9;
+    transform: translateY(-1px);
+}
+
+.edit-design-submit-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}

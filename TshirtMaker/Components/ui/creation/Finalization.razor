@@ -1,0 +1,101 @@
+@using TshirtMaker.Components.ui.common
+
+<div class="finalization-content">
+    @{
+        var finalDesignImage = string.IsNullOrEmpty(FinalDesignImage)
+        ? "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=600&q=80"
+        : FinalDesignImage;
+    }
+    <div class="finalization-card">
+        <div class="finalization-image-container">
+            <img src="@finalDesignImage" alt="Final Design" class="finalization-image" />
+            <div class="finalization-overlay">
+                <div class="finalization-logo">
+                    <svg fill="none" viewbox="0 0 48 48" xmlns="http://www.w3.org/2000/svg"
+                        style="width: 2rem; height: 2rem;">
+                        <path
+                            d="M24 45.8096C19.6865 45.8096 15.4698 44.5305 11.8832 42.134C8.29667 39.7376 5.50128 36.3314 3.85056 32.3462C2.19985 28.361 1.76794 23.9758 2.60947 19.7452C3.451 15.5145 5.52816 11.6284 8.57829 8.5783C11.6284 5.52817 15.5145 3.45101 19.7452 2.60948C23.9758 1.76795 28.361 2.19986 32.3462 3.85057C36.3314 5.50129 39.7376 8.29668 42.134 11.8833C44.5305 15.4698 45.8096 19.6865 45.8096 24L24 24L24 45.8096Z"
+                            fill="currentColor"></path>
+                    </svg>
+                </div>
+            </div>
+            @if (showShare)
+            {
+                <div class="finalization-share-overlay">
+                    <ShareSocial ImageUrl="@finalDesignImage" CustomText="@shareText" />
+                    <button class="finalization-share-close" @onclick="ToggleShare" title="Close">
+                        <span class="material-symbols-outlined">close</span>
+                    </button>
+                </div>
+            }
+        </div>
+    </div>
+
+    <div class="finalization-actions">
+        <button class="finalization-action-btn finalization-share-btn" @onclick="ToggleShare">
+            <span class="material-symbols-outlined">share</span>
+            <span>Share</span>
+        </button>
+        <button class="finalization-action-btn finalization-save-btn" @onclick="SaveDesign">
+            <span class="material-symbols-outlined">download</span>
+            <span>Save</span>
+        </button>
+        <button class="finalization-action-btn finalization-order-btn" @onclick="OrderDesign">
+            <span class="material-symbols-outlined">shopping_cart</span>
+            <span>Order</span>
+        </button>
+    </div>
+
+    <SaveDesignPopup IsOpen="@showSavePopup" InitialTitle="@Design?.Title" OnClose="CloseSavePopup" OnSave="HandleSave"
+        OnDiscard="HandleDiscard" />
+</div>
+
+@code {
+    [Parameter]
+    public string? FinalDesignImage { get; set; }
+
+    [Parameter]
+    public Design? Design { get; set; }
+
+    [Parameter]
+    public EventCallback<string> OnSave { get; set; }
+
+    [Parameter]
+    public EventCallback OnDiscard { get; set; }
+
+    private bool showShare = false;
+    private bool showSavePopup = false;
+    private string shareText = "Check out my custom design on ClothIQ!";
+
+    private void ToggleShare()
+    {
+        showShare = !showShare;
+    }
+
+    private void SaveDesign()
+    {
+        showSavePopup = true;
+    }
+
+    private void CloseSavePopup()
+    {
+        showSavePopup = false;
+    }
+
+    private async Task HandleSave(string title)
+    {
+        await OnSave.InvokeAsync(title);
+        showSavePopup = false;
+    }
+
+    private async Task HandleDiscard()
+    {
+        await OnDiscard.InvokeAsync();
+        showSavePopup = false;
+    }
+
+    private void OrderDesign()
+    {
+        // TODO: Implement order functionality
+    }
+}

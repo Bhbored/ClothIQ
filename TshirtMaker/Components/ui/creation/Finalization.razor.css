@@ -1,0 +1,199 @@
+.finalization-content {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 2rem;
+    padding: 2rem;
+}
+
+.finalization-card {
+    position: relative;
+    max-width: 600px;
+    width: 100%;
+    border-radius: 1.5rem;
+    overflow: hidden;
+    background: rgba(255, 255, 255, 0.03);
+    backdrop-filter: blur(12px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+}
+
+.finalization-image-container {
+    position: relative;
+    width: 100%;
+    aspect-ratio: 1;
+    overflow: hidden;
+}
+
+.finalization-image {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.finalization-overlay {
+    position: absolute;
+    top: 1rem;
+    right: 1rem;
+    z-index: 10;
+}
+
+.finalization-logo {
+    width: 3rem;
+    height: 3rem;
+    border-radius: 0.75rem;
+    background: var(--custom-primary-core);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    box-shadow: 0 4px 12px rgba(127, 19, 236, 0.4);
+}
+
+.finalization-actions {
+    display: flex;
+    gap: 1rem;
+    flex-wrap: wrap;
+    justify-content: center;
+}
+
+.finalization-action-btn {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.75rem 1.5rem;
+    border-radius: 0.75rem;
+    border: none;
+    font-weight: 600;
+    font-size: 0.875rem;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    min-width: 120px;
+    justify-content: center;
+}
+
+.finalization-share-btn {
+    background: rgba(255, 255, 255, 0.03);
+    backdrop-filter: blur(12px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    color: var(--custom-text-core);
+}
+
+.finalization-share-btn:hover {
+    background: rgba(255, 255, 255, 0.08);
+    transform: translateY(-2px);
+}
+
+.finalization-save-btn {
+    background: rgba(255, 255, 255, 0.03);
+    backdrop-filter: blur(12px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    color: var(--custom-text-core);
+}
+
+.finalization-save-btn:hover {
+    background: rgba(255, 255, 255, 0.08);
+    transform: translateY(-2px);
+}
+
+.finalization-order-btn {
+    background: var(--custom-primary-core);
+    color: #ffffff;
+    box-shadow: 0 4px 12px rgba(127, 19, 236, 0.4);
+}
+
+.finalization-order-btn:hover {
+    box-shadow: 0 6px 20px rgba(127, 19, 236, 0.6);
+    transform: translateY(-2px);
+}
+
+.finalization-action-btn .material-symbols-outlined {
+    font-size: 1.25rem;
+}
+
+.finalization-share-overlay {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    z-index: 20;
+    pointer-events: auto;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 1rem;
+    animation: fadeIn 0.3s ease;
+}
+
+.finalization-image-container:has(.finalization-share-overlay)::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.5);
+    z-index: 15;
+    pointer-events: none;
+}
+
+.finalization-share-close {
+    position: absolute;
+    top: -0.5rem;
+    right: -0.5rem;
+    width: 2rem;
+    height: 2rem;
+    border-radius: 50%;
+    background: rgba(0, 0, 0, 0.8);
+    backdrop-filter: blur(8px);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    color: #ffffff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    z-index: 21;
+}
+
+.finalization-share-close:hover {
+    background: rgba(255, 255, 255, 0.2);
+    transform: scale(1.1);
+}
+
+.finalization-share-close .material-symbols-outlined {
+    font-size: 1.25rem;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translate(-50%, -50%) scale(0.9);
+    }
+    to {
+        opacity: 1;
+        transform: translate(-50%, -50%) scale(1);
+    }
+}
+
+.finalization-empty {
+    text-align: center;
+    color: var(--custom-text-core);
+    opacity: 0.6;
+}
+
+@media (max-width: 768px) {
+    .finalization-content {
+        padding: 1rem;
+    }
+
+    .finalization-actions {
+        flex-direction: column;
+        width: 100%;
+    }
+
+    .finalization-action-btn {
+        width: 100%;
+    }
+}

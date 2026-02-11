@@ -1,0 +1,140 @@
+.share-social-compact-container {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.share-social-compact-close {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    z-index: 10;
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    background: rgba(0, 0, 0, 0.7);
+    backdrop-filter: blur(8px);
+    border: 2px solid rgba(255, 255, 255, 0.3);
+    color: white;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s ease;
+}
+
+.share-social-compact-close:hover {
+    background: rgba(0, 0, 0, 0.9);
+    border-color: rgba(255, 255, 255, 0.5);
+    transform: translate(-50%, -50%) scale(1.1);
+}
+
+.share-social-compact-close .material-symbols-outlined {
+    font-size: 20px;
+}
+
+.share-social-compact-main {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.share-social-compact-up,
+.share-social-compact-down {
+    display: flex;
+    flex-direction: row;
+    gap: 0.5rem;
+}
+
+.share-social-compact-card {
+    width: 50px;
+    height: 50px;
+    background: transparent;
+    border-radius: 4px;
+    border: 2px solid #2d2d2d;
+    box-shadow: 3px 3px 0px #2d2d2d;
+    transition: all 0.2s cubic-bezier(0.68, -0.55, 0.27, 1.55);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+}
+
+.share-social-compact-card1 {
+    border-radius: 50px 4px 4px 4px;
+    padding-top: 6px;
+    padding-left: 6px;
+}
+
+.share-social-compact-card2 {
+    border-radius: 4px 50px 4px 4px;
+    padding-top: 6px;
+    padding-right: 6px;
+}
+
+.share-social-compact-card3 {
+    border-radius: 4px 4px 4px 50px;
+    padding-bottom: 6px;
+    padding-left: 6px;
+}
+
+.share-social-compact-card4 {
+    border-radius: 4px 4px 50px 4px;
+    padding-bottom: 6px;
+    padding-right: 6px;
+}
+
+.share-social-compact-card svg {
+    width: 24px;
+    height: 24px;
+}
+
+.share-social-compact-instagram,
+.share-social-compact-twitter,
+.share-social-compact-facebook,
+.share-social-compact-whatsapp {
+    transition: fill 0.2s ease-in-out;
+}
+
+.share-social-compact-instagram {
+    fill: #e1306c;
+}
+
+.share-social-compact-twitter {
+    fill: #1da1f2;
+}
+
+.share-social-compact-facebook {
+    fill: #1877f2;
+}
+
+.share-social-compact-whatsapp {
+    fill: #00a849;
+}
+
+.share-social-compact-card:hover {
+    transform: translate(-3px, -3px);
+    box-shadow: 6px 6px 0px #2d2d2d;
+}
+
+.share-social-compact-card1:hover {
+    background-color: #fd1d1d;
+}
+
+.share-social-compact-card2:hover {
+    background-color: #24a0ed;
+}
+
+.share-social-compact-card3:hover {
+    background-color: #1877f2;
+}
+
+.share-social-compact-card4:hover {
+    background-color: #4cd137;
+}
+
+.share-social-compact-card:hover svg {
+    fill: white;
+}

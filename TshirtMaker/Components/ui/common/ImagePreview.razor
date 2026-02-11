@@ -1,0 +1,73 @@
+@if (IsVisible)
+{
+    <div class="image-preview-overlay" @onclick="Close">
+        <img src="@ResolveImageSrc(ImageUrl)" alt="Preview" class="image-preview-content" @onclick:stopPropagation="true" />
+        <button class="close-button" @onclick="Close">&times;</button>
+    </div>
+}
+
+<style>
+    .image-preview-overlay {
+        position: fixed;
+        inset: 0;
+        width: 100vw;
+        height: 100dvh;
+        min-height: 100dvh;
+        background-color: rgba(0, 0, 0, 0.85);
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        z-index: 9999;
+        padding: 1rem;
+        box-sizing: border-box;
+    }
+
+    .image-preview-content {
+        max-width: 100%;
+        max-height: calc(100dvh - 5rem);
+        width: auto;
+        height: auto;
+        object-fit: contain;
+        border-radius: 4px;
+        object-position: center;
+    }
+
+    .close-button {
+        position: absolute;
+        top: 1.25rem;
+        right: 1.5rem;
+        font-size: 40px;
+        color: white;
+        background: none;
+        border: none;
+        cursor: pointer;
+        z-index: 10001;
+        line-height: 1;
+        padding: 0;
+    }
+
+    .close-button:hover {
+        opacity: 0.7;
+    }
+</style>
+
+@code {
+    [Parameter] public bool IsVisible { get; set; } = false;
+    [Parameter] public string ImageUrl { get; set; } = string.Empty;
+    [Parameter] public EventCallback OnClose { get; set; }
+
+    private void Close()
+    {
+        IsVisible = false;
+        OnClose.InvokeAsync();
+    }
+
+    private static string ResolveImageSrc(string url)
+    {
+        if (string.IsNullOrEmpty(url)) return url;
+        if (url.StartsWith("http://", StringComparison.OrdinalIgnoreCase) || url.StartsWith("https://",
+        StringComparison.OrdinalIgnoreCase) || url.StartsWith("/"))
+            return url;
+        return "/" + url.TrimStart('/');
+    }
+}

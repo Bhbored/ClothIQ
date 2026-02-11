@@ -1,0 +1,179 @@
+:root {
+    --custom-bg-core: var(--custom-bg-light);
+    --custom-text-core: var(--custom-text-light);
+    --custom-card-core: var(--custom-card-light);
+    --custom-border-core: var(--custom-border-light);
+    --custom-primary-core: var(--custom-primary-light);
+    --custom-secondary-core: var(--custom-secondary-light);
+    --custom-accent-core: var(--custom-accent-light);
+    --custom-hover-core: var(--custom-hover-light);
+    --custom-input-core: var(--custom-input-light);
+    --custom-shadow-core: var(--custom-shadow-light);
+    
+    --custom-bg-light: #0a0a0e;
+    --custom-text-light: #e0e7ff;
+    --custom-card-light: #1a1a2e;
+    --custom-border-light: #16213e;
+    --custom-primary-light: #7f13ec;
+    --custom-secondary-light: #a855f7;
+    --custom-accent-light: #f72585;
+    --custom-hover-light: #16213e;
+    --custom-input-light: #1a1a2e;
+    --custom-shadow-light: rgba(0, 245, 255, 0.2);
+    
+    --custom-bg-dark: #000000;
+    --custom-text-dark: #00ff88;
+    --custom-card-dark: #0a0a15;
+    --custom-border-dark: #1a1a2e;
+    --custom-primary-dark: #7f13ec;
+    --custom-secondary-dark: #a855f7;
+    --custom-accent-dark: #ff00ff;
+    --custom-hover-dark: #1a1a2e;
+    --custom-input-dark: #0a0a15;
+    --custom-shadow-dark: rgba(0, 255, 255, 0.3);
+}
+
+[data-custom-theme="light"] {
+    --custom-bg-core: var(--custom-bg-light);
+    --custom-text-core: var(--custom-text-light);
+    --custom-card-core: var(--custom-card-light);
+    --custom-border-core: var(--custom-border-light);
+    --custom-primary-core: var(--custom-primary-light);
+    --custom-secondary-core: var(--custom-secondary-light);
+    --custom-accent-core: var(--custom-accent-light);
+    --custom-hover-core: var(--custom-hover-light);
+    --custom-input-core: var(--custom-input-light);
+    --custom-shadow-core: var(--custom-shadow-light);
+}
+
+[data-custom-theme="dark"] {
+    --custom-bg-core: var(--custom-bg-dark);
+    --custom-text-core: var(--custom-text-dark);
+    --custom-card-core: var(--custom-card-dark);
+    --custom-border-core: var(--custom-border-dark);
+    --custom-primary-core: var(--custom-primary-dark);
+    --custom-secondary-core: var(--custom-secondary-dark);
+    --custom-accent-core: var(--custom-accent-dark);
+    --custom-hover-core: var(--custom-hover-dark);
+    --custom-input-core: var(--custom-input-dark);
+    --custom-shadow-core: var(--custom-shadow-dark);
+}
+
+body {
+    background-color: var(--custom-bg-core);
+    color: var(--custom-text-core);
+    transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+.card-custom {
+    background-color: var(--custom-card-core);
+    border: 1px solid var(--custom-border-core);
+    color: var(--custom-text-core);
+    transition: all 0.3s ease;
+}
+
+.btn-custom-primary {
+    background: linear-gradient(135deg, var(--custom-primary-core), var(--custom-secondary-core));
+    color: #000;
+    border: 1px solid var(--custom-primary-core);
+    transition: all 0.3s ease;
+    font-weight: 600;
+    text-shadow: 0 0 10px rgba(255, 255, 255, 0.5);
+}
+
+.btn-custom-primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 20px var(--custom-shadow-core), 0 0 30px var(--custom-primary-core);
+    color: #000;
+    filter: brightness(1.2);
+}
+
+.btn-custom-secondary {
+    background-color: var(--custom-hover-core);
+    color: var(--custom-text-core);
+    border: 1px solid var(--custom-border-core);
+    transition: all 0.3s ease;
+}
+
+.btn-custom-secondary:hover {
+    background-color: var(--custom-border-core);
+    color: var(--custom-text-core);
+}
+
+.input-custom {
+    background-color: var(--custom-input-core);
+    color: var(--custom-text-core);
+    border: 1px solid var(--custom-border-core);
+    transition: all 0.3s ease;
+}
+
+.input-custom:focus {
+    border-color: var(--custom-primary-core);
+    box-shadow: 0 0 0 3px var(--custom-shadow-core), 0 0 20px var(--custom-primary-core);
+    background-color: var(--custom-input-core);
+    color: var(--custom-text-core);
+}
+
+.nav-custom {
+    background-color: var(--custom-card-core);
+    border-bottom: 1px solid var(--custom-border-core);
+    box-shadow: 0 2px 8px var(--custom-shadow-core);
+}
+
+.nav-link-custom {
+    color: var(--custom-text-core);
+    transition: all 0.3s ease;
+}
+
+.nav-link-custom:hover {
+    color: var(--custom-primary-core);
+    background-color: var(--custom-hover-core);
+}
+
+.dropdown-menu {
+    background-color: var(--custom-card-core) !important;
+    border: 1px solid var(--custom-border-core) !important;
+}
+
+.dropdown-item {
+    color: var(--custom-text-core) !important;
+    transition: all 0.3s ease;
+}
+
+.dropdown-item:hover {
+    background-color: var(--custom-hover-core) !important;
+    color: var(--custom-primary-core) !important;
+}
+
+.navbar-toggler {
+    border-color: var(--custom-border-core);
+}
+
+.navbar-toggler-icon {
+    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 30 30'%3e%3cpath stroke='rgba(0, 245, 255, 1)' stroke-linecap='round' stroke-miterlimit='10' stroke-width='2' d='M4 7h22M4 15h22M4 23h22'/%3e%3c/svg%3e");
+}
+
+.badge-custom {
+    background: linear-gradient(135deg, var(--custom-accent-core), var(--custom-secondary-core));
+    color: white;
+}
+
+.card-hover:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 8px 24px var(--custom-shadow-core);
+}
+
+.fade-in {
+    animation: fadeIn 0.5s ease-in;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}

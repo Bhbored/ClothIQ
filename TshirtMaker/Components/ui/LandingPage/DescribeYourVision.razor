@@ -1,0 +1,167 @@
+<section id="describe-vision" class="describe-vision-section fade-in">
+    <div class="container">
+        <div class="text-center mb-5 mb-md-6">
+            <div class="icon-container">
+                <div class="icon-glow"></div>
+                <div class="icon-wrapper">
+                    <span class="gradient-icon" style="font-size: 3rem;">🤖</span>
+                </div>
+            </div>
+            <div class="mt-4">
+                <h1 class="section-title">
+                    Describe Your Vision
+                </h1>
+                <p class="section-description">
+                    Tell our AI what you want. From abstract art to detailed illustrations, visualize it on premium
+                    apparel instantly.
+                </p>
+            </div>
+        </div>
+
+        <div class="row g-4">
+            <div class="col-lg-7">
+                <div class="input-section mb-4">
+                    <div class="input-glow"></div>
+                    <div class="input-wrapper">
+                        <span class="input-icon" style="font-size: 1.5rem;">✨</span>
+                        <input type="text" class="prompt-input"
+                            placeholder="A futuristic cyberpunk cat on a neon skateboard..." @bind="promptText"
+                            @bind:event="oninput" />
+                        <button class="generate-btn" @onclick="HandleGenerate">
+                            <span>Generate</span>
+                            <span>→</span>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="trending-section mb-4">
+                    <h3 class="trending-title">
+                        <span>📈</span>
+                        Trending Prompts
+                    </h3>
+                    <div class="prompt-buttons">
+                        @foreach (var prompt in trendingPrompts)
+                        {
+                            <button class="prompt-btn" @onclick="() => SetPrompt(prompt)">
+                                @prompt
+                            </button>
+                        }
+                    </div>
+                </div>
+
+                <div class="recent-creations">
+                    <h3 class="recent-title">Recent Creations</h3>
+                    <div class="creations-grid">
+                        @foreach (var creation in recentCreations)
+                        {
+                            <div class="creation-item">
+                                <img src="@creation.ImageUrl" alt="@creation.Alt" class="creation-image" />
+                            </div>
+                        }
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-lg-5">
+                <div class="preview-panel">
+                    <div class="preview-glow"></div>
+                    <div class="preview-content">
+                        <div class="preview-header">
+                            <div class="window-controls">
+                                <div class="control-dot red"></div>
+                                <div class="control-dot yellow"></div>
+                                <div class="control-dot green"></div>
+                            </div>
+                            <div class="preview-status">PREVIEW_MODE_ACTIVE</div>
+                        </div>
+                        <div class="mockup-container">
+                            <img src="@mockupImageUrl" alt="T-Shirt Mockup" class="mockup-image" />
+                            <div class="preview-placeholder">
+                                <span style="font-size: 3rem;">🖼️</span>
+                                <p>Your creation will appear here</p>
+                            </div>
+                            <div class="live-preview-badge">
+                                <div class="pulse-dot"></div>
+                                <span>Live Preview</span>
+                            </div>
+                        </div>
+                        <div class="preview-footer">
+                            <div class="color-selector">
+                                @foreach (var color in previewColors)
+                                {
+                                    <button class="color-select-btn @(selectedColor == color ? "active" : "")"
+                                        style="background-color: @color;" @onclick="() => SelectColor(color)" type="button"
+                                        title="@color"></button>
+                                }
+                            </div>
+                            <button class="download-btn">
+                                <span>⬇️</span>
+                                Download Mockup
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+@code {
+    private string promptText = string.Empty;
+    private string selectedColor = "#FFFFFF";
+    private string mockupImageUrl =
+    "https://lh3.googleusercontent.com/aida-public/AB6AXuAgWWVxl6MN8T11SYp4y1DZfvF1amb2mWUDXP4VDRkKF0f4fXdwqXIG8Za3qhsbj8T7uvYIOZkyunXpW_IHfQbWVXc8j-ub33vNw5mugezpo-Wvyw9-D3H0ncpLiPgT6AE-G0VvtRB_0J7-hUnERsDN1Ts5F35W2skapSaWtGfzydxVoJKXURbd6RjOv7Q5DOs1LJg35qBbUM_hfIwP2rCjI1rI6OWcR0jzMjo4-8DY4VLh_1bnbCHlCtB645tkQ0OTyKesI4z8O_Wm";
+
+    #region mockdata
+    private List<string> trendingPrompts = new()
+{
+"Astronaut riding a horse in space",
+"Vaporwave sunset palm trees",
+"Minimalist geometric fox",
+"Oil painting of a cozy library"
+};
+
+    private List<string> previewColors = new() { "#FFFFFF", "#000000", "#2563eb" };
+
+    private List<RecentCreation> recentCreations = new()
+{
+new RecentCreation
+{
+ImageUrl = "public/designs/image_1_1768985216052.jpg",
+Alt = "Abstract colorful digital art"
+},
+new RecentCreation
+{
+ImageUrl = "public/designs/image_1_1768985605312.jpg",
+Alt = "3D abstract render"
+},
+new RecentCreation
+{
+ImageUrl = "public/designs/image_1_1768985789863.jpg",
+Alt = "Cyberpunk style illustration"
+}
+};
+    #endregion
+
+
+    private void SetPrompt(string prompt)
+    {
+        promptText = prompt;
+    }
+
+    private void SelectColor(string color)
+    {
+        selectedColor = color;
+    }
+
+    private void HandleGenerate()
+    {
+        // later ma eli 5la2
+    }
+
+    private class RecentCreation
+    {
+        public string ImageUrl { get; set; } = string.Empty;
+        public string Alt { get; set; } = string.Empty;
+    }
+}

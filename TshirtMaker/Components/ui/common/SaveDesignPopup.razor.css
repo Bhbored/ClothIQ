@@ -1,0 +1,175 @@
+.save-design-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.5);
+    backdrop-filter: blur(4px);
+    z-index: 1000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.3s ease, visibility 0.3s ease;
+    padding: 1rem;
+}
+
+.save-design-overlay.save-design-open {
+    opacity: 1;
+    visibility: visible;
+}
+
+.save-design-container {
+    background: var(--custom-card-core);
+    border-radius: 1.5rem;
+    width: 100%;
+    max-width: 500px;
+    display: flex;
+    flex-direction: column;
+    transform: scale(0.9);
+    transition: transform 0.3s ease;
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.save-design-overlay.save-design-open .save-design-container {
+    transform: scale(1);
+}
+
+.save-design-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 1.5rem;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.save-design-title {
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: var(--custom-text-core);
+    margin: 0;
+}
+
+.save-design-close {
+    width: 2rem;
+    height: 2rem;
+    border-radius: 50%;
+    background: transparent;
+    border: none;
+    color: var(--custom-text-core);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    opacity: 0.7;
+}
+
+.save-design-close:hover {
+    opacity: 1;
+    background: rgba(255, 255, 255, 0.1);
+}
+
+.save-design-close .material-symbols-outlined {
+    font-size: 1.5rem;
+}
+
+.save-design-body {
+    padding: 1.5rem;
+}
+
+.save-design-field {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.save-design-label {
+    font-size: 0.875rem;
+    font-weight: 700;
+    color: var(--custom-text-core);
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+}
+
+.required {
+    color: #ff1744;
+}
+
+.save-design-input {
+    width: 100%;
+    padding: 0.75rem 1rem;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 0.75rem;
+    color: var(--custom-text-core);
+    font-size: 0.875rem;
+    outline: none;
+    transition: all 0.2s ease;
+}
+
+.save-design-input:focus {
+    border-color: var(--custom-primary-core);
+    background: rgba(255, 255, 255, 0.08);
+}
+
+.save-design-char-count {
+    font-size: 0.75rem;
+    color: var(--custom-text-core);
+    opacity: 0.5;
+    text-align: right;
+    margin-top: -0.25rem;
+}
+
+.save-design-footer {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 1rem;
+    padding: 1.5rem;
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.save-design-discard-btn,
+.save-design-submit-btn {
+    padding: 0.75rem 1.5rem;
+    border-radius: 0.75rem;
+    font-size: 0.875rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.save-design-discard-btn {
+    background: transparent;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    color: var(--custom-text-core);
+}
+
+.save-design-discard-btn:hover {
+    background: rgba(255, 255, 255, 0.05);
+    border-color: rgba(255, 255, 255, 0.3);
+}
+
+.save-design-submit-btn {
+    background: var(--custom-primary-core);
+    border: none;
+    color: #ffffff;
+    box-shadow: 0 4px 12px rgba(127, 19, 236, 0.2);
+}
+
+.save-design-submit-btn:hover:not(:disabled) {
+    background: var(--custom-primary-core);
+    opacity: 0.9;
+    transform: translateY(-1px);
+    box-shadow: 0 6px 16px rgba(127, 19, 236, 0.3);
+}
+
+.save-design-submit-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}

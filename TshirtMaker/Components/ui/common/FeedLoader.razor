@@ -1,0 +1,29 @@
+@if (IsCentered)
+{
+    <div class="feed-loader-container">
+        <div class="feed-loader">
+            <div class="feed-loader-dots">
+                <div class="feed-loader-dot"></div>
+                <div class="feed-loader-dot"></div>
+                <div class="feed-loader-dot"></div>
+            </div>
+            <span class="feed-loader-text">@Message</span>
+        </div>
+    </div>
+}
+else
+{
+    <div class="feed-loader">
+        <div class="feed-loader-dots">
+            <div class="feed-loader-dot"></div>
+            <div class="feed-loader-dot"></div>
+            <div class="feed-loader-dot"></div>
+        </div>
+        <span class="feed-loader-text">@Message</span>
+    </div>
+}
+
+@code {
+    [Parameter] public string Message { get; set; } = "Loading Inspiration";
+    [Parameter] public bool IsCentered { get; set; } = false;
+}

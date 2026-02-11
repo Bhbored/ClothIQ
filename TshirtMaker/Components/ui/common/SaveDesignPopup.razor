@@ -1,0 +1,75 @@
+<div class="save-design-overlay @(IsOpen ? "save-design-open" : "")" @onclick="ClosePopup">
+    <div class="save-design-container" @onclick:stopPropagation="true">
+        <div class="save-design-header">
+            <h3 class="save-design-title">Save Design</h3>
+            <button class="save-design-close" @onclick="ClosePopup" title="Close">
+                <span class="material-symbols-outlined">close</span>
+            </button>
+        </div>
+
+        <div class="save-design-body">
+            <div class="save-design-field">
+                <label class="save-design-label">Title <span class="required">*</span></label>
+                <input type="text" class="save-design-input" placeholder="Enter design title..." value="@designTitle"
+                    @oninput="@((ChangeEventArgs e) => { designTitle = e.Value?.ToString() ?? string.Empty; })"
+                    maxlength="50" />
+                <div class="save-design-char-count">@designTitle.Length / 50</div>
+            </div>
+        </div>
+
+        <div class="save-design-footer">
+            <button class="save-design-discard-btn" @onclick="HandleDiscard">Discard</button>
+            <button class="save-design-submit-btn" @onclick="HandleSave" disabled="@(!IsValid)">
+                Save
+            </button>
+        </div>
+    </div>
+</div>
+
+@code {
+    [Parameter] public bool IsOpen { get; set; }
+    [Parameter] public string? InitialTitle { get; set; }
+    [Parameter] public EventCallback OnClose { get; set; }
+    [Parameter] public EventCallback<string> OnSave { get; set; }
+    [Parameter] public EventCallback OnDiscard { get; set; }
+
+    private string designTitle = string.Empty;
+
+    private bool IsValid => !string.IsNullOrWhiteSpace(designTitle);
+
+    protected override void OnParametersSet()
+    {
+        if (IsOpen)
+        {
+            designTitle = InitialTitle ?? string.Empty;
+        }
+    }
+
+    private async Task ClosePopup()
+    {
+        ResetForm();
+        await OnClose.InvokeAsync();
+    }
+
+    private async Task HandleSave()
+    {
+        if (!IsValid)
+            return;
+
+        await OnSave.InvokeAsync(designTitle);
+        ResetForm();
+        await ClosePopup();
+    }
+
+    private async Task HandleDiscard()
+    {
+        ResetForm();
+        await OnDiscard.InvokeAsync();
+        await ClosePopup();
+    }
+
+    private void ResetForm()
+    {
+        designTitle = string.Empty;
+    }
+}

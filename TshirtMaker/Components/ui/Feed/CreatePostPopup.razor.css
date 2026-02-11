@@ -1,0 +1,392 @@
+.create-post-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.5);
+    backdrop-filter: blur(4px);
+    z-index: 1000;
+    display: flex;
+    align-items: flex-end;
+    justify-content: center;
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.3s ease, visibility 0.3s ease;
+}
+
+.create-post-overlay.create-post-open {
+    opacity: 1;
+    visibility: visible;
+}
+
+.create-post-container {
+    background: var(--custom-card-core);
+    border-radius: 1.5rem 1.5rem 0 0;
+    width: 100%;
+    max-width: 800px;
+    max-height: 90vh;
+    display: flex;
+    flex-direction: column;
+    transform: translateY(100%);
+    transition: transform 0.3s ease;
+    box-shadow: 0 -10px 40px rgba(0, 0, 0, 0.3);
+}
+
+.create-post-overlay.create-post-open .create-post-container {
+    transform: translateY(0);
+}
+
+.create-post-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 1.5rem;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.create-post-title {
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: var(--custom-text-core);
+    margin: 0;
+}
+
+.create-post-close {
+    width: 2rem;
+    height: 2rem;
+    border-radius: 50%;
+    background: transparent;
+    border: none;
+    color: var(--custom-text-core);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    opacity: 0.7;
+}
+
+.create-post-close:hover {
+    opacity: 1;
+    background: rgba(255, 255, 255, 0.1);
+}
+
+.create-post-close .material-symbols-outlined {
+    font-size: 1.5rem;
+}
+
+.create-post-body {
+    flex: 1;
+    overflow-y: auto;
+    padding: 1.5rem;
+}
+
+.create-post-form {
+    display: flex;
+    flex-direction: column;
+    gap: 2rem;
+}
+
+.create-post-field {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+
+.create-post-title-with-counter {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    width: 100%;
+}
+
+.create-post-label {
+    font-size: 0.875rem;
+    font-weight: 700;
+    color: var(--custom-text-core);
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+}
+
+.required {
+    color: #ff1744;
+}
+
+.create-post-input {
+    width: 100%;
+    padding: 0.75rem 1rem;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 0.75rem;
+    color: var(--custom-text-core);
+    font-size: 0.875rem;
+    outline: none;
+    transition: all 0.2s ease;
+}
+
+.create-post-input:focus {
+    border-color: var(--custom-primary-core);
+    background: rgba(255, 255, 255, 0.08);
+}
+
+.create-post-input.error {
+    border-color: #ff1744;
+}
+
+.create-post-error {
+    font-size: 0.75rem;
+    color: #ff1744;
+    margin-top: -0.5rem;
+}
+
+.create-post-char-count {
+    font-size: 0.75rem;
+    color: var(--custom-text-core);
+    opacity: 0.7;
+}
+
+.create-post-designs-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1rem;
+}
+
+.create-post-design-card {
+    position: relative;
+    background: rgba(255, 255, 255, 0.05);
+    border: 2px solid rgba(255, 255, 255, 0.1);
+    border-radius: 0.75rem;
+    overflow: hidden;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.create-post-design-card:hover {
+    border-color: var(--custom-primary-core);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(127, 19, 236, 0.2);
+}
+
+.create-post-design-card.selected {
+    border-color: var(--custom-primary-core);
+    background: rgba(127, 19, 236, 0.1);
+    box-shadow: 0 4px 12px rgba(127, 19, 236, 0.3);
+}
+
+.create-post-design-card.selected::after {
+    content: "✓";
+    position: absolute;
+    top: 0.5rem;
+    right: 0.5rem;
+    width: 1.5rem;
+    height: 1.5rem;
+    background: var(--custom-primary-core);
+    color: #ffffff;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    font-size: 0.875rem;
+    z-index: 10;
+}
+
+.create-post-design-image {
+    width: 100%;
+    aspect-ratio: 1;
+    background-size: cover;
+    background-position: center;
+    background-color: var(--custom-bg-core);
+    position: relative;
+    overflow: hidden;
+}
+
+.create-post-design-title-overlay {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background: linear-gradient(to top, rgba(0, 0, 0, 0.8), transparent);
+    padding: 0.75rem;
+    transform: translateY(100%);
+    transition: transform 0.3s ease;
+    opacity: 0;
+}
+
+.create-post-design-card:hover .create-post-design-title-overlay {
+    transform: translateY(0);
+    opacity: 1;
+}
+
+.create-post-design-title-text {
+    color: #ffffff;
+    font-size: 0.75rem;
+    font-weight: 600;
+    display: block;
+    text-align: center;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.create-post-design-info {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0.75rem;
+    gap: 0.5rem;
+}
+
+.create-post-design-color-container {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.create-post-design-color {
+    width: 1.5rem;
+    height: 1.5rem;
+    border-radius: 50%;
+    border: 2px solid rgba(255, 255, 255, 0.2);
+    flex-shrink: 0;
+}
+
+.create-post-design-color-name {
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: var(--custom-text-core);
+    opacity: 0.7;
+    text-transform: capitalize;
+}
+
+.create-post-design-size {
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: var(--custom-text-core);
+    opacity: 0.7;
+    text-transform: uppercase;
+}
+
+.create-post-empty {
+    grid-column: 1 / -1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 3rem 1rem;
+    text-align: center;
+    color: var(--custom-text-core);
+    opacity: 0.5;
+}
+
+.create-post-empty .material-symbols-outlined {
+    font-size: 3rem;
+    margin-bottom: 1rem;
+    opacity: 0.3;
+}
+
+.create-post-empty p {
+    margin: 0;
+    font-size: 0.875rem;
+}
+
+.create-post-switch-label {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    cursor: pointer;
+    user-select: none;
+}
+
+.create-post-switch {
+    display: none;
+}
+
+.create-post-switch-slider {
+    position: relative;
+    width: 3rem;
+    height: 1.5rem;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 9999px;
+    transition: all 0.3s ease;
+}
+
+.create-post-switch-slider::before {
+    content: "";
+    position: absolute;
+    width: 1.25rem;
+    height: 1.25rem;
+    left: 0.125rem;
+    top: 50%;
+    transform: translateY(-50%);
+    background: #ffffff;
+    border-radius: 50%;
+    transition: all 0.3s ease;
+}
+
+.create-post-switch:checked + .create-post-switch-slider {
+    background: var(--custom-primary-core);
+}
+
+.create-post-switch:checked + .create-post-switch-slider::before {
+    transform: translate(1.5rem, -50%);
+}
+
+.create-post-switch-text {
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: var(--custom-text-core);
+}
+
+.create-post-footer {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 1rem;
+    padding: 1.5rem;
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.create-post-cancel-btn {
+    padding: 0.75rem 1.5rem;
+    background: transparent;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 0.75rem;
+    color: var(--custom-text-core);
+    font-size: 0.875rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.create-post-cancel-btn:hover {
+    background: rgba(255, 255, 255, 0.05);
+    border-color: rgba(255, 255, 255, 0.3);
+}
+
+.create-post-submit-btn {
+    padding: 0.75rem 1.5rem;
+    background: var(--custom-primary-core);
+    border: none;
+    border-radius: 0.75rem;
+    color: #ffffff;
+    font-size: 0.875rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    box-shadow: 0 4px 12px rgba(127, 19, 255, 0.2);
+}
+
+.create-post-submit-btn:hover:not(:disabled) {
+    background: var(--custom-primary-core);
+    opacity: 0.9;
+    transform: translateY(-1px);
+    box-shadow: 0 6px 16px rgba(127, 19, 255, 0.3);
+}
+
+.create-post-submit-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}

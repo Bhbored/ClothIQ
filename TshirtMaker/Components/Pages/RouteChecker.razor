@@ -1,0 +1,52 @@
+@page "/"
+@inject AuthStateService Auth
+@inject NavigationManager Nav
+@inject ILogger<RouteChecker> Logger
+@inject IJSRuntime JSRuntime
+@using TshirtMaker.Services
+
+<div class="minimal-splash">
+    <div class="logo-container">
+        <div class="logo-icon">
+            <i class="bi bi-shirt"></i>
+        </div>
+        <h1 class="app-title">TshirtMaker</h1>
+    </div>
+    <div class="loading-container">
+        <div class="loading-dots">
+            <span class="dot dot-1"></span>
+            <span class="dot dot-2"></span>
+            <span class="dot dot-3"></span>
+        </div>
+        <p class="loading-text">Loading your creative space...</p>
+    </div>
+</div>
+
+@code {
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            await Auth.InitializeAsync();
+
+            await Task.Delay(200);
+
+            if (!Auth.IsAuthenticated || Auth.CurrentUser == null)
+            {
+                Nav.NavigateTo("/landing", forceLoad: true);
+            }
+            else
+            {
+                Nav.NavigateTo("/dashboard", forceLoad: true);
+            }
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError("Error during route check: {Message}", ex.Message);
+            Nav.NavigateTo("/landing", forceLoad: true);
+        }
+
+        await base.OnInitializedAsync();
+    }
+}
