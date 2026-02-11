@@ -79,3 +79,4 @@ if (document.readyState === "loading") {
 } else {
   window.initScrollAnimations();
 }
+

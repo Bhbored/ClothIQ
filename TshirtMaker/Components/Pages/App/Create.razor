@@ -8,6 +8,7 @@
 @inject AuthStateService AuthService
 @inject SupabaseStorageService SupabaseStorage
 @inject NavigationManager Nav
+@inject IJSRuntime JSRuntime
 @using TshirtMaker.Components.ui.creation
 @using TshirtMaker.Components.ui.common
 @using TshirtMaker.PublicData
@@ -39,12 +40,12 @@
                             <!-- Apparel Type -->
                             <div class="create-spec-group">
                                 <p class="create-label">Apparel Type</p>
-                                <div class="dropdown">
-                                    <button class="btn btn-secondary dropdown-toggle create-apparel-dropdown" type="button"
-                                            id="apparelTypeDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                            <div class="custom-dropdown" @ref="apparelDropdownRef">
+                                    <button class="btn btn-secondary custom-dropdown-toggle create-apparel-dropdown" type="button"
+                                            id="apparelTypeDropdown" @onclick="(() => ToggleApparelDropdown())">
                                         @selectedApparelType.ToString()
                                     </button>
-                                    <ul class="dropdown-menu create-dropdown-menu" aria-labelledby="apparelTypeDropdown">
+                                    <ul class="custom-dropdown-menu create-dropdown-menu" @ref="apparelMenuRef">
                                         @foreach (var apparelType in apparelTypes)
                                         {
                                             <li>
@@ -61,14 +62,14 @@
                             <!-- Base Color -->
                             <div class="create-spec-group">
                                 <p class="create-label">Base Color</p>
-                                <div class="dropdown">
-                                    <button class="btn btn-secondary dropdown-toggle create-apparel-dropdown" type="button"
-                                            id="colorDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                                <div class="custom-dropdown" @ref="colorDropdownRef">
+                                    <button class="btn btn-secondary custom-dropdown-toggle create-apparel-dropdown" type="button"
+                                            id="colorDropdown" @onclick="(() => ToggleColorDropdown())">
                                         <span class="color-preview"
                                               style="background-color: @(selectedColor ?? "#FFFFFF");"></span>
                                         @ColorHelper.HexToColorName(selectedColor!)
                                     </button>
-                                    <ul class="dropdown-menu create-dropdown-menu" aria-labelledby="colorDropdown">
+                                    <ul class="custom-dropdown-menu create-dropdown-menu" @ref="colorMenuRef">
                                         @foreach (var color in baseColors)
                                         {
                                             <li>
@@ -399,6 +400,11 @@
 
     private Design? currentDesign = null;
 
+    private ElementReference apparelDropdownRef;
+    private ElementReference apparelMenuRef;
+    private ElementReference colorDropdownRef;
+    private ElementReference colorMenuRef;
+
     #endregion
 
 
@@ -588,7 +594,7 @@
 
     }
 
-    void switchApparel(ClothingType type)
+    async Task switchApparel(ClothingType type)
     {
         selectedApparelType = type;
         clothImage = selectedApparelType switch
@@ -611,6 +617,7 @@
         }
 
         StateHasChanged();
+        await JSRuntime.InvokeVoidAsync("closeCustomDropdown", apparelDropdownRef, apparelMenuRef);
     }
 
     private bool CanNavigateToStep(string step)
@@ -708,7 +715,7 @@
 
     #region Update Methods
 
-    private void UpdateColor(string color)
+    private async Task UpdateColor(string color)
     {
         selectedColor = color;
         if (currentDesign != null)
@@ -716,6 +723,7 @@
             currentDesign.Color = color;
         }
         StateHasChanged();
+        await JSRuntime.InvokeVoidAsync("closeCustomDropdown", colorDropdownRef, colorMenuRef);
     }
 
     private void UpdateSize(ClothingSize size)
@@ -823,6 +831,16 @@
         await Repository.CreateAsync(designdto);
         await UserRepo.UpdateAsync(userdto);
         await RefreshPage();
+    }
+
+    private async Task ToggleApparelDropdown()
+    {
+        await JSRuntime.InvokeVoidAsync("toggleCustomDropdown", apparelDropdownRef, apparelMenuRef);
+    }
+
+    private async Task ToggleColorDropdown()
+    {
+        await JSRuntime.InvokeVoidAsync("toggleCustomDropdown", colorDropdownRef, colorMenuRef);
     }
 
     public void Dispose()
