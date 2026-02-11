@@ -36,18 +36,17 @@ namespace TshirtMaker.Services
 
                 var client = new global::Supabase.Client(supabaseUrl, supabaseAnonKey, options);
 
-                _ = Task.Run(async () =>
-                {
+              
                     try
                     {
-                        await client.InitializeAsync();
+                         client.InitializeAsync();
                     }
                     catch (Exception ex)
                     {
                         var logger = sp.GetService<ILoggerFactory>()?.CreateLogger("Supabase.Client.Init");
                         logger?.LogError(ex, "Failed to initialize Supabase.Client");
                     }
-                });
+               
 
                 return client;
             });

@@ -453,11 +453,8 @@
                     currentUser.LikesGiven.Remove(likeToRemove);
 
                     StateHasChanged();
-                    _ = Task.Run(async () =>
-                     {
-                         await PostRepository.UpdateAsync(PostDto.FromModel(post));
-                         await LikeRepository.DeleteAsync((LikeDto.FromModel(likeToRemove)).Id);
-                     });
+                    await PostRepository.UpdateAsync(PostDto.FromModel(post));
+                    await LikeRepository.DeleteAsync((LikeDto.FromModel(likeToRemove)).Id);
                 }
             }
             else
@@ -476,11 +473,8 @@
 
                 StateHasChanged();
 
-                _ = Task.Run(async () =>
-               {
-                   await PostRepository.UpdateAsync(PostDto.FromModel(post));
-                   await LikeRepository.CreateAsync(LikeDto.FromModel(newlike));
-               });
+                await PostRepository.UpdateAsync(PostDto.FromModel(post));
+                await LikeRepository.CreateAsync(LikeDto.FromModel(newlike));
 
             }
         }
@@ -516,13 +510,9 @@
                 post.Bookmarks.Remove(bookmarkToRemove);
                 currentUser.Bookmarks.Remove(bookmarkToRemove);
                 StateHasChanged();
-                _ = Task.Run(async () =>
-                {
-                    await BookmarkRepository.DeleteAsync(bookmarkToRemove.Id);
-                    await PostRepository.UpdateAsync(PostDto.FromModel(post));
-                    await UserRepository.UpdateAsync(UserDto.FromModel(currentUser));
-
-                });
+                await BookmarkRepository.DeleteAsync(bookmarkToRemove.Id);
+                await PostRepository.UpdateAsync(PostDto.FromModel(post));
+                await UserRepository.UpdateAsync(UserDto.FromModel(currentUser));
 
             }
         }
@@ -541,13 +531,9 @@
             .Add(newBookmark);
             StateHasChanged();
 
-            _ = Task.Run(async () =>
-               {
-                   await BookmarkRepository.CreateAsync(BookmarkDto.FromModel(newBookmark));
-                   await PostRepository.UpdateAsync(PostDto.FromModel(post));
-                   await UserRepository.UpdateAsync(UserDto.FromModel(currentUser));
-
-               });
+            await BookmarkRepository.CreateAsync(BookmarkDto.FromModel(newBookmark));
+            await PostRepository.UpdateAsync(PostDto.FromModel(post));
+            await UserRepository.UpdateAsync(UserDto.FromModel(currentUser));
         }
 
         StateHasChanged();
@@ -577,7 +563,7 @@
             {
                 userCollections.Remove(collectionToRemove);
                 StateHasChanged();
-                _ = await CollectionRepository.DeleteAsync(collectionToRemove.Id);
+                await CollectionRepository.DeleteAsync(collectionToRemove.Id);
 
             }
         }
@@ -593,7 +579,7 @@
 
             userCollections.Add(newCollection);
             StateHasChanged();
-            _ = await CollectionRepository.CreateAsync(CollectionDto.FromModel(newCollection));
+             await CollectionRepository.CreateAsync(CollectionDto.FromModel(newCollection));
         }
 
         StateHasChanged();

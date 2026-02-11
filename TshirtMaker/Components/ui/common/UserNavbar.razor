@@ -159,12 +159,9 @@
         {
             var ID = Auth.CurrentUser.Id;
 
-            _ = Task.Run(async () =>
-            {
-                var userdto = await UserRepository.GetByIdAsync(ID);
-                userdto!.AvatarUrl = avatarUrl;
-                await UserRepository.UpdateAsync(userdto!);
-            });
+            var userdto = await UserRepository.GetByIdAsync(ID);
+            userdto!.AvatarUrl = avatarUrl;
+            await UserRepository.UpdateAsync(userdto!);
 
         }
     }

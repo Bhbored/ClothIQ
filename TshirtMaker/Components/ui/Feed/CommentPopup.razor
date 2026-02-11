@@ -99,13 +99,9 @@
         Post.Comments.Add(newComment);
         CurrentUser.Comments.Add(newComment);
         StateHasChanged();
-        _ = Task.Run(async () =>
-        {
-            await CommentRepository.CreateAsync(CommentDto.FromModel(newComment));
-            await PostRepository.UpdateAsync(PostDto.FromModel(Post));
-            await UserRepository.UpdateAsync(UserDto.FromModel(CurrentUser));
-
-        });
+        await CommentRepository.CreateAsync(CommentDto.FromModel(newComment));
+        await PostRepository.UpdateAsync(PostDto.FromModel(Post));
+        await UserRepository.UpdateAsync(UserDto.FromModel(CurrentUser));
         commentText = string.Empty;
         await OnAddComment.InvokeAsync(Post);
     }
