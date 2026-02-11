@@ -1,6 +1,6 @@
 [build]
   publish = "publish/wwwroot"
-  command = "dotnet publish TshirtMaker/TshirtMaker.csproj -c Release -o publish /p:Nullable=disable /p:TreatWarningsAsErrors=false"
+  command = "dotnet publish TshirtMaker/TshirtMaker.csproj -c Release -o publish /p:TreatWarningsAsErrors=false"
 
 [[redirects]]
   from = "/*"
