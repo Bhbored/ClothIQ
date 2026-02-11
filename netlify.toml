@@ -1,6 +1,6 @@
 [build]
-  publish = "publish/wwwroot"
-  command = "dotnet publish -c Release -o publish"
+  publish = "TshirtMaker/bin/Release/net8.0/browser-wasm/publish/wwwroot"
+  command = "dotnet publish TshirtMaker/TshirtMaker.csproj -c Release"
 
 [[redirects]]
   from = "/*"
