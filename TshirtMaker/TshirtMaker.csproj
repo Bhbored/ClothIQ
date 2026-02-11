@@ -1,10 +1,10 @@
-<Project Sdk="Microsoft.NET.Sdk.BlazorWebAssembly">
+﻿<Project Sdk="Microsoft.NET.Sdk.BlazorWebAssembly">
 
 	<PropertyGroup>
 		<TargetFramework>net8.0</TargetFramework>
-		<Nullable>enable</Nullable>
+		<Nullable>disable</Nullable>
 		<ImplicitUsings>enable</ImplicitUsings>
-		<NoWarn>$(NoWarn);CA2016</NoWarn>
+		<NoWarn>CS0234;CS1503;CS1662;CS0835;CS8618;CS1998;CS8604;CS2016</NoWarn>
 	</PropertyGroup>
 
 	<ItemGroup>
