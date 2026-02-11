@@ -36,7 +36,7 @@ public class AuthStateService
 
         try
         {
-            // First, try to restore session from storage if needed
+
             await _supabaseAuth.RestoreSessionFromStorageAsync();
 
             var userDto = await _supabaseAuth.GetCurrentUserAsync();

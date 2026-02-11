@@ -54,7 +54,7 @@ namespace TshirtMaker.Services.Supabase
                     return MapToUserDto(currentUser);
                 }
 
-                // First try the current user from the client
+
                 var accessToken = GetStoredAccessToken();
                 if (!string.IsNullOrEmpty(accessToken))
                 {
@@ -69,7 +69,7 @@ namespace TshirtMaker.Services.Supabase
             }
             catch
             {
-                // On exception, try to refresh the session
+
                 await TryRefreshSessionAsync();
 
                 try
@@ -89,17 +89,17 @@ namespace TshirtMaker.Services.Supabase
             }
         }
 
-        // New method to explicitly restore session from storage
+
         public async Task<bool> RestoreSessionFromStorageAsync()
         {
             try
             {
-                // Since we can't directly access the session handler from the Supabase client,
-                // we'll try to refresh the session which should trigger our session handler
-                // to load the session from localStorage
+
+
+
                 await TryRefreshSessionAsync();
-                
-                // Check if the user is now available
+
+
                 var currentUser = _supabase.Auth.CurrentUser;
                 return currentUser != null;
             }
@@ -195,7 +195,7 @@ namespace TshirtMaker.Services.Supabase
             if (!string.IsNullOrEmpty(refreshToken))
                 _cachedRefreshToken = refreshToken;
 
-          
+
         }
 
         private string? GetStoredAccessToken()

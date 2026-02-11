@@ -5,7 +5,7 @@ using System.Text.Json;
 
 namespace TshirtMaker.Services.Supabase
 {
-    // Session handler for WASM that persists sessions in browser storage
+
     public class SupabaseSessionHandler : IGotrueSessionPersistence<Session>, IDisposable
     {
         private readonly IJSRuntime _jsRuntime;
@@ -16,8 +16,8 @@ namespace TshirtMaker.Services.Supabase
         public SupabaseSessionHandler(IJSRuntime jsRuntime)
         {
             _jsRuntime = jsRuntime;
-            // Attempt to load session on initialization
-            _ = LoadSessionInternalAsync(); // Fire and forget initial load
+
+            _ = LoadSessionInternalAsync();
         }
 
         private async Task SaveSessionInternalAsync(Session session)
@@ -28,8 +28,8 @@ namespace TshirtMaker.Services.Supabase
                 {
                     var sessionJson = JsonSerializer.Serialize(session);
                     await _jsRuntime.InvokeVoidAsync("localStorage.setItem", SessionKey, sessionJson);
-                    
-                    // Also keep in-memory cache synchronized
+
+
                     lock (_lock)
                     {
                         _currentSession = session;
@@ -37,7 +37,7 @@ namespace TshirtMaker.Services.Supabase
                 }
                 catch (JSException)
                 {
-                    // Handle cases where localStorage is not available
+
                     lock (_lock)
                     {
                         _currentSession = session;
@@ -51,8 +51,8 @@ namespace TshirtMaker.Services.Supabase
             try
             {
                 await _jsRuntime.InvokeVoidAsync("localStorage.removeItem", SessionKey);
-                
-                // Also clear in-memory cache
+
+
                 lock (_lock)
                 {
                     _currentSession = null;
@@ -60,7 +60,7 @@ namespace TshirtMaker.Services.Supabase
             }
             catch (JSException)
             {
-                // Handle cases where localStorage is not available
+
                 lock (_lock)
                 {
                     _currentSession = null;
@@ -77,13 +77,13 @@ namespace TshirtMaker.Services.Supabase
                     return null;
 
                 var session = JsonSerializer.Deserialize<Session>(sessionJson);
-                
-                // Update in-memory cache
+
+
                 lock (_lock)
                 {
                     _currentSession = session;
                 }
-                
+
                 return session;
             }
             catch (JSException)
@@ -95,16 +95,16 @@ namespace TshirtMaker.Services.Supabase
             }
             catch (JsonException)
             {
-                // If JSON deserialization fails, remove the corrupted session
+
                 try
                 {
                     await _jsRuntime.InvokeVoidAsync("localStorage.removeItem", SessionKey);
                 }
                 catch (JSException)
                 {
-                    // Ignore errors during cleanup
+
                 }
-                
+
                 lock (_lock)
                 {
                     return _currentSession;
@@ -129,31 +129,31 @@ namespace TshirtMaker.Services.Supabase
 
         public void SaveSession(Session session)
         {
-            // For synchronous calls, update in-memory cache immediately and save to storage async
+
             lock (_lock)
             {
                 _currentSession = session;
             }
-            
-            // Fire and forget the async storage operation
+
+
             _ = SaveSessionInternalAsync(session);
         }
 
         public void DestroySession()
         {
-            // For synchronous calls, clear in-memory cache immediately and destroy storage async
+
             lock (_lock)
             {
                 _currentSession = null;
             }
-            
-            // Fire and forget the async storage operation
+
+
             _ = DestroySessionInternalAsync();
         }
 
         public Session? LoadSession()
         {
-            // For synchronous calls, return from in-memory cache
+
             lock (_lock)
             {
                 return _currentSession;
@@ -162,7 +162,7 @@ namespace TshirtMaker.Services.Supabase
 
         public void Dispose()
         {
-            // Cleanup if needed
+
         }
     }
 }

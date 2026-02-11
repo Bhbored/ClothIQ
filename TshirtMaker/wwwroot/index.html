@@ -10,14 +10,15 @@
 
     <!-- Bootstrap CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet"
-          integrity="sha384-sRIl4kxILFvY47J16cr9ZwB07vP4J8+LH7qKQnuqkuIAvNWLzeN8tE5YBujZqJLB" crossorigin="anonymous">
+        integrity="sha384-sRIl4kxILFvY47J16cr9ZwB07vP4J8+LH7qKQnuqkuIAvNWLzeN8tE5YBujZqJLB" crossorigin="anonymous">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
 
     <!-- Fonts -->
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800;900&family=Inter:wght@300;400;500;600;700&display=swap"
-          rel="stylesheet">
+    <link
+        href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800;900&family=Inter:wght@300;400;500;600;700&display=swap"
+        rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap"
-          rel="stylesheet">
+        rel="stylesheet">
 
     <!-- App CSS -->
     <link rel="stylesheet" href="css/app.css" />
@@ -55,23 +56,20 @@
 
     <!-- Bootstrap JS -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"
-            integrity="sha384-FKyoEForCGlyvwx9Hj09JcYn3nv7wiPVlz7YYwJrWVcXK/BmnVDxM/D2scQbITxI"
-            crossorigin="anonymous"></script>
+        integrity="sha384-FKyoEForCGlyvwx9Hj09JcYn3nv7wiPVlz7YYwJrWVcXK/BmnVDxM/D2scQbITxI"
+        crossorigin="anonymous"></script>
 
     <!-- Blazor Framework -->
     <script src="_framework/blazor.webassembly.js" autostart="false"></script>
 
     <!-- App Scripts -->
     <script src="theme.js"></script>
-    
+
     <script>
-        // Initialize the splash screen and keep it visible until the app is fully ready
         window.addEventListener('load', function () {
-            // Start Blazor but keep the splash screen visible
             Blazor.start({
                 loadBootResource: function (type, name, defaultUri, integrity) {
                     if (type === 'dotnetjs') {
-                        // Show the loading dots when downloading runtime
                         const dots = document.querySelectorAll('.dot');
                         if (dots && dots.length > 0) {
                             dots.forEach(dot => {
@@ -80,14 +78,12 @@
                         }
                     }
                     if (type === 'assembly') {
-                        // Update loading text when downloading assemblies
                         const loadingText = document.querySelector('.loading-text');
                         if (loadingText) {
                             loadingText.textContent = 'Preparing application...';
                         }
                     }
-                    
-                    // Return the default URI for all resources
+
                     return defaultUri;
                 }
             });
