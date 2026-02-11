@@ -1,0 +1,11 @@
+[build]
+  publish = "publish/wwwroot"
+  command = "dotnet publish -c Release -o publish"
+
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200
+
+[build.environment]
+  DOTNET_VERSION = "8.0.x"
